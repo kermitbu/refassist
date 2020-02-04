@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 2.6)
+
+set(CMAKE_CXX_FLAGS "-Wall -O0 -g -std=c++11 -fno-access-control" )  
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../protobuf-3.11.3/src)
+
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../protobuf-3.11.3/src/.libs)
+
+set(SRC_LIST test.cpp)
+
+link_libraries(libprotobuf.a)
+
+add_executable(ut ${SRC_LIST})
