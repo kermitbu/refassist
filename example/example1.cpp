@@ -62,7 +62,8 @@ int main(int argc, char* argv[])
         int32_t id_get;
         pb->get_attr("id", id_get);
         printf("  get id= %d\n", id_get);
-        
+
+        printf("-----------------\n");
         ///////////////////////////////////////////
         auto newpb = pbmsg_t::create("../example/addressbook.proto", "Person");
         newpb->set_bin(result);
@@ -79,6 +80,8 @@ int main(int argc, char* argv[])
         pb->get_attr("id", new_pb_id_get);
         printf("  newpb get id= %d\n", new_pb_id_get);
 
+        delete newpb;
+        delete pb;
     }
 
 

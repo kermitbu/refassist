@@ -53,7 +53,9 @@ int main(int argc, char* argv[])
             printf("%02x ", result[i]);
         }
         printf("\n-----------------\n");
-        delete reqdata;
+                 
+        // reqdata 已经被添加到addressbook中了，不需要再次进行释放;
+        delete addressbook;
 #if 0
         std::string name_get;
         addressbook->get_attr("data.name", name_get);
@@ -66,7 +68,7 @@ int main(int argc, char* argv[])
         int32_t syd_get;
         addressbook->get_attr("syd_get", syd_get);
         printf("  get syd_get= %d\n", syd_get);
-        #endif
+#endif
     }
     return 0;
 }
