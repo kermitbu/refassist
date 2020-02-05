@@ -21,14 +21,14 @@ public:
         return nullptr;
     }
 
-    static pbmsg_t* create(const std::string& file, const std::string& msg_name)
+    static pbmsg_t* create(const std::string& file, const std::string& msgtype)
     {
         pbmsg_t* pbmsg = new (std::nothrow) pbmsg_t();
         if (nullptr == pbmsg) {
             return nullptr;
         }
 
-        if (pbmsg->import(file, msg_name) != 0) {
+        if (pbmsg->import(file, msgtype) != 0) {
             delete pbmsg;
             return nullptr;
         }
@@ -36,7 +36,7 @@ public:
         return pbmsg;
     }
 
-    int import(const std::string& file, const std::string& msg_name, std::string errmsg = "")
+    int import(const std::string& file, const std::string& msgtype, std::string* errmsg = nullptr)
     {
         file_error_collector_t error_collector;
         std::string parent, basename;
@@ -46,6 +46,7 @@ public:
         source_tree.MapPath("", parent);
         importer_ptr_ = new (std::nothrow) google::protobuf::compiler::Importer(&source_tree, &error_collector);
         if (nullptr == importer_ptr_) {
+            if (errmsg) {*errmsg = "alloc importer failed!";}
             return -1;
         }
 
@@ -54,15 +55,18 @@ public:
             return -2;
         }
         if (!error_collector.text_.empty()) {
-            errmsg = error_collector.text_;
+            if (errmsg) {*errmsg = error_collector.text_;}
             return -3;
         }
-
-        desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msg_name);
 
         factory_ptr_ = new (std::nothrow) google::protobuf::DynamicMessageFactory(file_desc_ptr_->pool());
         if (nullptr == importer_ptr_) {
             return -4;
+        }
+        desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msgtype);
+        if (nullptr == desc_ptr_) {
+            if (errmsg) {*errmsg = "alloc importer failed!"+ msgtype;}
+            return -5;
         }
 
         msg_ptr_ = factory_ptr_->GetPrototype(desc_ptr_)->New();
@@ -72,12 +76,12 @@ public:
         return 0;
     }
 
-    int set_attr(const std::string& name, const int32_t& value, std::string errmsg = "")
+    int set_attr(const std::string& name, const int32_t& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            errmsg = name + " is a repeated field!";
+            if (errmsg) {*errmsg = name + " is a repeated field!";}
             return -1;
         }
 
@@ -86,19 +90,19 @@ public:
         return 0;
     }
 
-    int get_attr(const std::string& name, int32_t& value, std::string errmsg = "")
+    int get_attr(const std::string& name, int32_t& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
         value = reflection_ptr_->GetInt32(*msg_ptr_, field);
         return 0;
     }
 
-    int set_attr(const std::string& name, const std::string& value, std::string errmsg = "")
+    int set_attr(const std::string& name, const std::string& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            errmsg = name + " is't a repeated field!";
+            if (errmsg) {*errmsg = name + " is a repeated field!";}
             return -1;
         }
 
@@ -107,13 +111,13 @@ public:
         return 0;
     }
 
-    int set_attr(const std::string& name, pbmsg_t* value, std::string errmsg = "")
+    int set_attr(const std::string& name, pbmsg_t* value, std::string* errmsg = nullptr)
     {
         google::protobuf::Message* submsg = value->get_msg();
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            errmsg = name + " is't a repeated field!";
+            if (errmsg) {*errmsg = name + " is a repeated field!";}
             return -1;
         }
 
@@ -122,7 +126,7 @@ public:
         return 0;
     }
 
-    int get_attr(const std::string& name, std::string& value, std::string errmsg = "")
+    int get_attr(const std::string& name, std::string& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
         value = reflection_ptr_->GetString(*msg_ptr_, field);
