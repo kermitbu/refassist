@@ -16,9 +16,19 @@ public:
 
 class pbmsg_t final {
 public:
-    static pbmsg_t* create(const google::protobuf::Message* msg_ptr_)
+    static pbmsg_t* create(const google::protobuf::Message* msg)
     {
-        return nullptr;
+        pbmsg_t* pbmsg = new (std::nothrow) pbmsg_t();
+        if (nullptr == pbmsg) {
+            return nullptr;
+        }
+    
+        pbmsg->msg_ptr_ = msg->New();
+        pbmsg->msg_ptr_->CopyFrom(*msg);
+        pbmsg->desc_ptr_ = msg->GetDescriptor();
+        pbmsg->reflection_ptr_ = msg->GetReflection();
+
+        return pbmsg;
     }
 
     static pbmsg_t* create(const std::string& file, const std::string& msgtype)
@@ -61,8 +71,10 @@ public:
 
         factory_ptr_ = new (std::nothrow) google::protobuf::DynamicMessageFactory(file_desc_ptr_->pool());
         if (nullptr == importer_ptr_) {
+            if (errmsg) {*errmsg = "alloc message factory failed!";}
             return -4;
         }
+
         desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msgtype);
         if (nullptr == desc_ptr_) {
             if (errmsg) {*errmsg = "alloc importer failed!"+ msgtype;}
@@ -125,6 +137,15 @@ public:
 
         return 0;
     }
+
+    int get_attr(const std::string& name, pbmsg_t** value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        auto& msg = reflection_ptr_->GetMessage(*msg_ptr_, field);
+        *value = pbmsg_t::create(&msg);
+        return 0;
+    }
+
 
     int get_attr(const std::string& name, std::string& value, std::string* errmsg = nullptr)
     {

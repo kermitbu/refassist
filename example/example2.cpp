@@ -1,74 +1,79 @@
 #include "addressbook.pb.h"
 #include "pbmsg.hpp"
 #include <cstdio>
+#include <iostream>
+
 using namespace std;
 
 int main(int argc, char* argv[])
 {
-    printf(">>>对比创建嵌套类>>> \n");
-    int tid = 112;
+    printf(">>>对比创建基础类>>> \n");
+    int id = 233;
     std::string name = "buxk";
-    int syd = 100;
+    std::string email = "kermit.bu@qq.com";
     {
         printf("通过源码创建对象>>> \n");
-        AddressBook addressbook;
-        addressbook.mutable_data()->set_tid(tid);
-        printf("  set data.tid = %d\n", tid);
-        addressbook.mutable_data()->set_name(name);
-        printf("  set data.name = %s\n", name.c_str());
-        addressbook.set_syd(syd);
-        printf("  set syd = %d\n", syd);
+        Person person;
+        person.set_name(name);
+        printf("  set name= %s\n", name.c_str());
+        person.set_email(email);
+        printf("  set email= %s\n", email.c_str());
+        person.set_id(id);
+        printf("  set id = %d\n", id);
 
         std::string result;
-        addressbook.SerializeToString(&result);
+        person.SerializeToString(&result);
 
         printf("-----------------\n  result length = %zu\n  ", result.length());
         for (std::string::size_type i = 0; i < result.length(); i++) {
             printf("%02x ", result[i]);
         }
         printf("\n\n");
-    }
 
-    /////////////////////////////////////////////////////////////////////////////////
-    {
-        printf("通过反射创建对象 >>> \n");
+        printf("通过PB对象创建对象 >>> \n");
 
-        pbmsg_t* reqdata = pbmsg_t::create("../example/addressbook.proto", "AddressBook.req_data");
-        std::string errmsg;
-
-        reqdata->set_attr("tid", tid, &errmsg);
-        printf("  set data.tid = %d\n", tid);
-        reqdata->set_attr("name", name);
-        printf("  set data.name = %s\n", name.c_str());
-
-        pbmsg_t* addressbook = pbmsg_t::create("../example/addressbook.proto", "AddressBook");
-        addressbook->set_attr("syd", syd);
-        printf("  set syd = %d\n", syd);
-
-        addressbook->set_attr("data", reqdata, &errmsg);
-        std::string result = addressbook->get_bin();
-
+        auto pb = pbmsg_t::create(&person);
+        result = pb->get_bin();
         printf("-----------------\n  result length = %zu\n  ", result.length());
         for (std::string::size_type i = 0; i < result.length(); i++) {
             printf("%02x ", result[i]);
         }
         printf("\n-----------------\n");
-                 
-        // reqdata 已经被添加到addressbook中了，不需要再次进行释放;
-        delete addressbook;
-#if 0
+
+        name = "kermit";
+        pb->set_attr("name", name);
+        printf("  set new name= %s\n", name.c_str());
+        email = "38272702@qq.com";
+        pb->set_attr("email", email);
+        printf("  set new email= %s\n", email.c_str());
+        id = 990;
+        pb->set_attr("id", id);
+        printf("  set new id = %d\n", id);
+
+        result = pb->get_bin();
+        printf("-----------------\n  result length = %zu\n  ", result.length());
+        for (std::string::size_type i = 0; i < result.length(); i++) {
+            printf("%02x ", result[i]);
+        }
+        printf("\n-----------------\n");
+
         std::string name_get;
-        addressbook->get_attr("data.name", name_get);
-        printf("  get data.name= %s\n", name_get.c_str());
+        pb->get_attr("name", name_get);
+        printf("  get name= %s\n", name_get.c_str());
 
-        int32_t tid_get;
-        addressbook->get_attr("data.tid", tid_get);
-        printf("  get data.tid= %d\n", tid_get);
+        std::string email_get;
+        pb->get_attr("email", email_get);
+        printf("  get email= %s\n", email_get.c_str());
 
-        int32_t syd_get;
-        addressbook->get_attr("syd_get", syd_get);
-        printf("  get syd_get= %d\n", syd_get);
-#endif
+        int32_t id_get;
+        pb->get_attr("id", id_get);
+        printf("  get id= %d\n", id_get);
+
+        printf("-----------------\n");
+     
+        delete pb;
     }
+
+
     return 0;
 }
