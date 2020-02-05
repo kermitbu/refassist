@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     {
         printf("通过反射创建对象 >>> \n");
 
-        auto reqdata = pbmsg_t::create("../example/addressbook.proto", "AddressBook.req_data");
+        pbmsg_t* reqdata = pbmsg_t::create("../example/addressbook.proto", "AddressBook.req_data");
         char errmsg[256];
 
         reqdata->set_attr("tid", tid, errmsg);
@@ -41,11 +41,11 @@ int main(int argc, char* argv[])
         reqdata->set_attr("name", name);
         printf("  set data.name = %s\n", name.c_str());
 
-        auto addressbook = pbmsg_t::create("../example/addressbook.proto", "AddressBook");
+        pbmsg_t* addressbook = pbmsg_t::create("../example/addressbook.proto", "AddressBook");
         addressbook->set_attr("syd", syd);
         printf("  set syd = %d\n", syd);
 
-        addressbook->set_attr("data", reqdata->to_pb(), errmsg);
+        addressbook->set_attr("data", reqdata, errmsg);
         std::string result = addressbook->get_bin();
 
         printf("-----------------\n  result length = %zu\n  ", result.length());
@@ -53,6 +53,7 @@ int main(int argc, char* argv[])
             printf("%02x ", result[i]);
         }
         printf("\n-----------------\n");
+        delete reqdata;
 #if 0
         std::string name_get;
         addressbook->get_attr("data.name", name_get);

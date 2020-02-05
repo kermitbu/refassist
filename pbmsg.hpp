@@ -91,8 +91,9 @@ public:
         return 0;
     }
 
-    int set_attr(const std::string& name, google::protobuf::Message* value, std::string errmsg = "")
+    int set_attr(const std::string& name, pbmsg_t* value, std::string errmsg = "")
     {
+        google::protobuf::Message* submsg = value->get_msg();
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
@@ -100,7 +101,7 @@ public:
             return -1;
         }
 
-        reflection_ptr_->SetAllocatedMessage(msg_ptr_, value, field);
+        reflection_ptr_->SetAllocatedMessage(msg_ptr_, submsg, field);
 
         return 0;
     }
@@ -112,7 +113,7 @@ public:
         return 0;
     }
 
-    google::protobuf::Message* to_pb()
+    google::protobuf::Message* get_msg()
     {
         return msg_ptr_;
     }
@@ -127,7 +128,7 @@ public:
 
     int set_bin(std::string& pbdata)
     {
-        return 0;
+        return msg_ptr_->ParseFromString(pbdata) ? 0 : -1;
     }
 
 
