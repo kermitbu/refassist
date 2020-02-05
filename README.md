@@ -20,10 +20,21 @@ cmake ../build && make
 #### 使用说明
 
 ```
+// 根据proto文件创建一个对象
 auto pbmsg = pbmsg_t::create("../example/addressbook.proto", "Person");
-pbmsg->set_attr("name", std::string("abc"));
-pbmsg->set_attr("id", 234);
+
+// 设置属性值
+pbmsg->set_attr("name", std::string("kermit"));
+pbmsg->set_attr("id", 1203);
+
+// 获取序列化后的二进制流
 auto result = pbmsg->get_bin();
+
+// 获取属性值
+std::string name;
+pbmsg->get_attr("name", name);
+int32_t id = 0;
+pbmsg->get_attr("id", id);
 ```
 
 #### 参与贡献
