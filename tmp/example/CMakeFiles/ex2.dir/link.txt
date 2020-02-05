@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -O0 -g -std=c++11  -rdynamic CMakeFiles/ex2.dir/example2.cpp.o CMakeFiles/ex2.dir/addressbook.pb.cc.o  -o /mnt/d/gitee/pbmsg/build/ex2  -L/mnt/d/gitee/pbmsg/example/../protobuf/src/.libs -Wl,-rpath,/mnt/d/gitee/pbmsg/example/../protobuf/src/.libs -Wl,-Bstatic -lprotobuf -Wl,-Bdynamic 

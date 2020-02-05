@@ -8,6 +8,11 @@ pbmsg是一个对protobuf反射用法的一个封装，使反射更易用。
 #### 编译说明
 
 ```bash
+# 编译protobuf
+cd protobuf
+sh autogen.sh && ./configure && make
+cd -
+
 mkdir tmp && cd tmp
 cmake ../build && make
 ```

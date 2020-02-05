@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -O0 -g -std=c++11 -fno-access-control  -rdynamic CMakeFiles/ut.dir/test.cpp.o  -o /mnt/d/gitee/pbmsg/build/ut  -L/mnt/d/gitee/pbmsg/test/../protobuf/src/.libs -Wl,-rpath,/mnt/d/gitee/pbmsg/test/../protobuf/src/.libs -Wl,-Bstatic -lprotobuf -Wl,-Bdynamic 
