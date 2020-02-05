@@ -4,11 +4,21 @@
 #include "google/protobuf/dynamic_message.h"
 #include "google/protobuf/message.h"
 
+class file_error_collector_t : public google::protobuf::compiler::MultiFileErrorCollector {
+public:
+    std::string text_;
+
+    void AddError(const std::string& filename, int line, int column, const std::string& message) override
+    {
+        text_ = filename + ":" + std::to_string(line) + ":" + std::to_string(column) + ":" + message + "\n";
+    }
+};
+
 class pbmsg_t final {
 public:
     static pbmsg_t* create(const google::protobuf::Message* msg_ptr_)
     {
-		return nullptr;
+        return nullptr;
     }
 
     static pbmsg_t* create(const std::string& file, const std::string& msg_name)
@@ -26,26 +36,33 @@ public:
         return pbmsg;
     }
 
-    int import(const std::string& file, const std::string& msg_name)
+    int import(const std::string& file, const std::string& msg_name, std::string errmsg = "")
     {
-
+        file_error_collector_t error_collector;
         std::string parent, basename;
         split_file_name(file, parent, basename);
         google::protobuf::compiler::DiskSourceTree source_tree;
         source_tree.MapPath("", "./");
         source_tree.MapPath("", parent);
-        importer_ptr_ = new (std::nothrow) google::protobuf::compiler::Importer(&source_tree, NULL);
+        importer_ptr_ = new (std::nothrow) google::protobuf::compiler::Importer(&source_tree, &error_collector);
         if (nullptr == importer_ptr_) {
             return -1;
         }
 
         file_desc_ptr_ = importer_ptr_->Import(basename);
+        if (nullptr == file_desc_ptr_) {
+            return -2;
+        }
+        if (!error_collector.text_.empty()) {
+            errmsg = error_collector.text_;
+            return -3;
+        }
 
         desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msg_name);
 
         factory_ptr_ = new (std::nothrow) google::protobuf::DynamicMessageFactory(file_desc_ptr_->pool());
         if (nullptr == importer_ptr_) {
-            return -2;
+            return -4;
         }
 
         msg_ptr_ = factory_ptr_->GetPrototype(desc_ptr_)->New();
@@ -54,7 +71,6 @@ public:
 
         return 0;
     }
-
 
     int set_attr(const std::string& name, const int32_t& value, std::string errmsg = "")
     {
@@ -131,7 +147,6 @@ public:
         return msg_ptr_->ParseFromString(pbdata) ? 0 : -1;
     }
 
-
     pbmsg_t()
     {
     }
@@ -146,8 +161,9 @@ public:
             delete msg_ptr_;
         }
     }
+
 private:
-	static void split_file_name(const std::string& fullpath, std::string& parent, std::string& basename)
+    static void split_file_name(const std::string& fullpath, std::string& parent, std::string& basename)
     {
         std::string file = fullpath;
         bool is_replaced = false;
