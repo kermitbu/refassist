@@ -1,0 +1,4 @@
+[submodule "protobuf"]
+	path = protobuf
+	url = https://gitee.com/kermitbuxk/protobuf.git
+	branch = 3.11.x
