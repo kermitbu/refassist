@@ -109,6 +109,134 @@ public:
         return 0;
     }
 
+
+    int set_attr(const std::string& name, const uint32_t& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+
+        if (field->is_repeated()) {
+            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            return -1;
+        }
+
+        reflection_ptr_->SetUInt32(msg_ptr_, field, value);
+
+        return 0;
+    }
+
+    int get_attr(const std::string& name, uint32_t& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        value = reflection_ptr_->GetUInt32(*msg_ptr_, field);
+        return 0;
+    }
+
+    int set_attr(const std::string& name, const int64_t& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+
+        if (field->is_repeated()) {
+            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            return -1;
+        }
+
+        reflection_ptr_->SetInt64(msg_ptr_, field, value);
+
+        return 0;
+    }
+
+    int get_attr(const std::string& name, int64_t& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        value = reflection_ptr_->GetInt64(*msg_ptr_, field);
+        return 0;
+    }
+
+    int set_attr(const std::string& name, const uint64_t& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+
+        if (field->is_repeated()) {
+            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            return -1;
+        }
+
+        reflection_ptr_->SetUInt64(msg_ptr_, field, value);
+
+        return 0;
+    }
+
+    int get_attr(const std::string& name, uint64_t& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        value = reflection_ptr_->GetUInt64(*msg_ptr_, field);
+        return 0;
+    }
+
+    int set_attr(const std::string& name, const float& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+
+        if (field->is_repeated()) {
+            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            return -1;
+        }
+
+        reflection_ptr_->SetFloat(msg_ptr_, field, value);
+
+        return 0;
+    }
+
+    int get_attr(const std::string& name, float& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        value = reflection_ptr_->GetFloat(*msg_ptr_, field);
+        return 0;
+    }
+    
+    int set_attr(const std::string& name, const double& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+
+        if (field->is_repeated()) {
+            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            return -1;
+        }
+
+        reflection_ptr_->SetDouble(msg_ptr_, field, value);
+
+        return 0;
+    }
+
+    int get_attr(const std::string& name, double& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        value = reflection_ptr_->GetDouble(*msg_ptr_, field);
+        return 0;
+    }
+
+    int set_attr(const std::string& name, const bool& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+
+        if (field->is_repeated()) {
+            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            return -1;
+        }
+
+        reflection_ptr_->SetBool(msg_ptr_, field, value);
+
+        return 0;
+    }
+
+    int get_attr(const std::string& name, bool& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        value = reflection_ptr_->GetBool(*msg_ptr_, field);
+        return 0;
+    }
+
+
     int set_attr(const std::string& name, const std::string& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
@@ -120,6 +248,13 @@ public:
 
         reflection_ptr_->SetString(msg_ptr_, field, value);
 
+        return 0;
+    }
+
+    int get_attr(const std::string& name, std::string& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        value = reflection_ptr_->GetString(*msg_ptr_, field);
         return 0;
     }
 
@@ -143,14 +278,6 @@ public:
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
         auto& msg = reflection_ptr_->GetMessage(*msg_ptr_, field);
         *value = pbmsg_t::create(&msg);
-        return 0;
-    }
-
-
-    int get_attr(const std::string& name, std::string& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetString(*msg_ptr_, field);
         return 0;
     }
 
