@@ -38,6 +38,9 @@ int main(int argc, char* argv[])
         pbmsg_t* data;
         new_addressbook->get_attr("data", &data);
 
+        std::string name_get;
+        data->get_attr("name", name_get);
+        printf("  get data.name= %s\n", name_get.c_str());
     }
     return 0;
 }

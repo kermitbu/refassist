@@ -176,6 +176,14 @@ public:
     {
     }
 
+    pbmsg_t(const pbmsg_t& pbmsg)
+    {
+        msg_ptr_ = pbmsg.msg_ptr_->New();
+        msg_ptr_->CopyFrom(*pbmsg.msg_ptr_);
+        desc_ptr_ = pbmsg.msg_ptr_->GetDescriptor();
+        reflection_ptr_ = pbmsg.msg_ptr_->GetReflection();
+    }
+
     ~pbmsg_t()
     {
         if (importer_ptr_ != nullptr) {
