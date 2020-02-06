@@ -8,7 +8,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../protobuf/src)
 
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../protobuf/src/.libs)
 
-set(EX1_SRC_LIST example1.cpp addressbook.pb.cc)
+set(EX1_SRC_LIST example1.cpp ./protos/testmsg.pb.cc)
 set(EX2_SRC_LIST example2.cpp addressbook.pb.cc)
 set(EX3_SRC_LIST example3.cpp addressbook.pb.cc)
 set(EX4_SRC_LIST example4.cpp addressbook.pb.cc)

@@ -1,5 +1,5 @@
 #include <new>
-
+#include <cassert>
 #include "google/protobuf/compiler/importer.h"
 #include "google/protobuf/dynamic_message.h"
 #include "google/protobuf/message.h"
@@ -18,34 +18,38 @@ using google::protobuf::FieldDescriptor;
 using google::protobuf::Message;
 using google::protobuf::Reflection;
 
-template <typename T1>
+template <typename T>
 struct field_oper_t {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, T1 value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value)
     {
-        ref->SetInt32(msg, field, value);
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);   
+        ref->SetEnumValue(msg, field, value);
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, T1 value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, T value)
     {
-        ref->SetRepeatedInt32(msg, field, idx, value);
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);   
+        ref->SetRepeatedEnumValue(msg, field, idx, value);
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, T1 value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value)
     {
-        ref->AddInt32(msg, field, value);
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);  
+        ref->AddEnumValue(msg, field, value);
     }
 
-    T1 get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    T get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
     {
-        return ref->GetInt32(*msg, field);
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);  
+        return ref->GetEnumValue(*msg, field);
     }
 
-    T1 get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    T get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
     {
-        return ref->GetRepeatedInt32(*msg, field, idx);
+        assert(field->type() == FieldDescriptor::TYPE_ENUM); 
+        return ref->GetRepeatedEnumValue(*msg, field, idx);
     }
 };
-
 class pbmsg_t final {
 public:
     static pbmsg_t* create(google::protobuf::Message* msg, bool trusted = false)
@@ -123,28 +127,6 @@ public:
 
         return 0;
     }
-
-    enum class attr_type {
-        DOUBLE = 1,
-        FLOAT = 2,
-        INT64 = 3,
-        UINT64 = 4,
-        INT32 = 5,
-        FIXED64 = 6,
-        FIXED32 = 7,
-        BOOL = 8,
-        STRING = 9,
-        GROUP = 10,
-        MESSAGE = 11,
-        BYTES = 12,
-        UINT32 = 13,
-        ENUM = 14,
-        SFIXED32 = 15,
-        SFIXED64 = 16,
-        SINT32 = 17,
-        SINT64 = 18,
-        MAX_TYPE = 18,
-    };
 
     template <typename T1>
     int set_attr(const std::string& name, const T1& value, std::string* errmsg = nullptr)
