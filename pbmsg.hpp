@@ -1,8 +1,8 @@
-#include <new>
-#include <cassert>
 #include "google/protobuf/compiler/importer.h"
 #include "google/protobuf/dynamic_message.h"
 #include "google/protobuf/message.h"
+#include <cassert>
+#include <new>
 
 class file_error_collector_t : public google::protobuf::compiler::MultiFileErrorCollector {
 public:
@@ -20,33 +20,33 @@ using google::protobuf::Reflection;
 
 template <typename T>
 struct field_oper_t {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value, std::string* errmsg)
     {
-        assert(field->type() == FieldDescriptor::TYPE_ENUM);   
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
         ref->SetEnumValue(msg, field, value);
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, T value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, T value, std::string* errmsg)
     {
-        assert(field->type() == FieldDescriptor::TYPE_ENUM);   
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
         ref->SetRepeatedEnumValue(msg, field, idx, value);
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value, std::string* errmsg)
     {
-        assert(field->type() == FieldDescriptor::TYPE_ENUM);  
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
         ref->AddEnumValue(msg, field, value);
     }
 
-    T get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    T get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
-        assert(field->type() == FieldDescriptor::TYPE_ENUM);  
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
         return T(ref->GetEnumValue(*msg, field));
     }
 
-    T get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    T get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
-        assert(field->type() == FieldDescriptor::TYPE_ENUM); 
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
         return T(ref->GetRepeatedEnumValue(*msg, field, idx));
     }
 };
@@ -146,7 +146,7 @@ public:
             return -2;
         }
 
-        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, value);
+        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, value, errmsg);
 
         return 0;
     }
@@ -162,7 +162,7 @@ public:
             return -1;
         }
 
-        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field);
+        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, errmsg);
 
         return 0;
     }
@@ -185,7 +185,7 @@ public:
             return -2;
         }
 
-        field_oper_t<T1>().add(reflection_ptr_, msg_ptr_, field);
+        field_oper_t<T1>().add(reflection_ptr_, msg_ptr_, field, errmsg);
 
         return 0;
     }
@@ -216,7 +216,7 @@ public:
             return -3;
         }
 
-        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, idx, value);
+        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, idx, value, errmsg);
 
         return 0;
     }
@@ -247,7 +247,7 @@ public:
             return -3;
         }
 
-        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, idx);
+        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, idx, errmsg);
         return 0;
     }
 
@@ -322,185 +322,505 @@ private:
 
 template <>
 struct field_oper_t<int32_t> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int32_t value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int32_t value, std::string* errmsg)
     {
-        if (field->type() == FieldDescriptor::TYPE_ENUM) {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
             ref->SetEnumValue(msg, field, value);
-        } else {
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
             ref->SetInt32(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
         }
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, int32_t value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, int32_t value, std::string* errmsg)
     {
-        if (field->type() == FieldDescriptor::TYPE_ENUM) {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
             ref->SetRepeatedEnumValue(msg, field, idx, value);
-        } else {
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
             ref->SetRepeatedInt32(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
         }
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, int32_t value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, int32_t value, std::string* errmsg)
     {
-        if (field->type() == FieldDescriptor::TYPE_ENUM) {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
             ref->AddEnumValue(msg, field, value);
-        } else {
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
             ref->AddInt32(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
         }
     }
 
-    int32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    int32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
-        if (field->type() == FieldDescriptor::TYPE_ENUM) {
-            return ref->GetEnumValue(*msg, field);
+        int32_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ret = ref->GetEnumValue(*msg, field);
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
+            ret = ref->GetInt32(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
         }
-        return ref->GetInt32(*msg, field);
+        return ret;
     }
 
-    int32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    int32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
-        if (field->type() == FieldDescriptor::TYPE_ENUM) {
-            return ref->GetRepeatedEnumValue(*msg, field, idx);
+        int32_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ret = ref->GetRepeatedEnumValue(*msg, field, idx);
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
+            ret = ref->GetRepeatedInt32(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
         }
-        return ref->GetRepeatedInt32(*msg, field, idx);
+
+        return ret;
     }
 };
 
 template <>
 struct field_oper_t<uint32_t> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint32_t value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint32_t value, std::string* errmsg)
     {
-        ref->SetUInt32(msg, field, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ref->SetEnumValue(msg, field, int(value));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+            ref->SetUInt32(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, uint32_t value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, uint32_t value, std::string* errmsg)
     {
-        ref->SetRepeatedUInt32(msg, field, idx, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ref->SetRepeatedEnumValue(msg, field, idx, int(value));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+
+            ref->SetRepeatedUInt32(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint32_t value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint32_t value, std::string* errmsg)
     {
-        ref->AddUInt32(msg, field, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ref->AddEnumValue(msg, field, int(value));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+            ref->AddUInt32(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    uint32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    uint32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
-        return ref->GetUInt32(*msg, field);
+        uint32_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ret = uint32_t(ref->GetEnumValue(*msg, field));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+            ret = ref->GetUInt32(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
+        return ret;
     }
 
-    uint32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    uint32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
-        return ref->GetRepeatedUInt32(*msg, field, idx);
+        uint32_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ret = uint32_t(ref->GetRepeatedEnumValue(*msg, field, idx));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+            ret = ref->GetRepeatedUInt32(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
+        return ret;
     }
 };
 
 template <>
 struct field_oper_t<int64_t> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int64_t value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int64_t value, std::string* errmsg)
     {
-        ref->SetInt64(msg, field, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ref->SetInt64(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, int64_t value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, int64_t value, std::string* errmsg)
     {
-        ref->SetRepeatedInt64(msg, field, idx, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ref->SetRepeatedInt64(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, int64_t value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, int64_t value, std::string* errmsg)
     {
-        ref->AddInt64(msg, field, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ref->AddInt64(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    int64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    int64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
-        return ref->GetInt64(*msg, field);
+        int64_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ret = ref->GetInt64(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
+        return ret;
     }
 
-    int64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    int64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
-        return ref->GetRepeatedInt64(*msg, field, idx);
+        int64_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ret = ref->GetRepeatedInt64(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
+        return ret;
     }
 };
 
 template <>
 struct field_oper_t<uint64_t> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint64_t value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint64_t value, std::string* errmsg)
     {
-        ref->SetUInt64(msg, field, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ref->SetUInt64(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, uint64_t value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, uint64_t value, std::string* errmsg)
     {
-        ref->SetRepeatedUInt64(msg, field, idx, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ref->SetRepeatedUInt64(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint64_t value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint64_t value, std::string* errmsg)
     {
-        ref->AddUInt64(msg, field, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ref->AddUInt64(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    uint64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    uint64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
-        return ref->GetUInt64(*msg, field);
+        uint64_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ret = ref->GetUInt64(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
+        return ret;
     }
 
-    uint64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    uint64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
-        return ref->GetRepeatedUInt64(*msg, field, idx);
+        uint64_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ret = ref->GetRepeatedUInt64(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
+        return ret;
     }
 };
 
 template <>
 struct field_oper_t<float> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, float value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, float value, std::string* errmsg)
     {
-        ref->SetFloat(msg, field, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+            ref->SetFloat(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, float value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, float value, std::string* errmsg)
     {
-        ref->SetRepeatedFloat(msg, field, idx, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+            ref->SetRepeatedFloat(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, float value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, float value, std::string* errmsg)
     {
-        ref->AddFloat(msg, field, value);
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+            ref->AddFloat(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
     }
 
-    float get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    float get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
-        return ref->GetFloat(*msg, field);
+        float ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+            ret = ref->GetFloat(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
+        return ret;
     }
 
-    float get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    float get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
-        return ref->GetRepeatedFloat(*msg, field, idx);
+        float ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+
+            ret = ref->GetRepeatedFloat(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+            }
+            assert(false);
+            break;
+        }
+        return ret;
     }
 };
 
 template <>
 struct field_oper_t<double> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, double value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, double value, std::string* errmsg)
     {
         ref->SetDouble(msg, field, value);
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, double value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, double value, std::string* errmsg)
     {
         ref->SetRepeatedDouble(msg, field, idx, value);
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, double value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, double value, std::string* errmsg)
     {
         ref->AddDouble(msg, field, value);
     }
 
-    double get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    double get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
         return ref->GetDouble(*msg, field);
     }
 
-    double get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    double get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
         return ref->GetRepeatedDouble(*msg, field, idx);
     }
@@ -508,27 +828,27 @@ struct field_oper_t<double> {
 
 template <>
 struct field_oper_t<bool> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, bool value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, bool value, std::string* errmsg)
     {
         ref->SetBool(msg, field, value);
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, bool value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, bool value, std::string* errmsg)
     {
         ref->SetRepeatedBool(msg, field, idx, value);
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, bool value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, bool value, std::string* errmsg)
     {
         ref->AddBool(msg, field, value);
     }
 
-    bool get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    bool get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
         return ref->GetBool(*msg, field);
     }
 
-    bool get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    bool get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
         return ref->GetRepeatedBool(*msg, field, idx);
     }
@@ -536,27 +856,27 @@ struct field_oper_t<bool> {
 
 template <>
 struct field_oper_t<std::string> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string value, std::string* errmsg)
     {
         ref->SetString(msg, field, value);
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string value, std::string* errmsg)
     {
         ref->SetRepeatedString(msg, field, idx, value);
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string value, std::string* errmsg)
     {
         ref->AddString(msg, field, value);
     }
 
-    std::string get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    std::string get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
         return ref->GetString(*msg, field);
     }
 
-    std::string get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    std::string get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
         return ref->GetRepeatedString(*msg, field, idx);
     }
@@ -565,26 +885,26 @@ struct field_oper_t<std::string> {
 //////////////////////
 template <>
 struct field_oper_t<Message*> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value, std::string* errmsg)
     {
         ref->SetAllocatedMessage(msg, value, field);
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, Message* value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, Message* value, std::string* errmsg)
     {
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value, std::string* errmsg)
     {
         ref->AddAllocatedMessage(msg, field, value);
     }
 
-    Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
         return ref->MutableMessage(msg, field);
     }
 
-    Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
         return ref->MutableRepeatedMessage(msg, field, idx);
     }
@@ -592,26 +912,26 @@ struct field_oper_t<Message*> {
 
 template <>
 struct field_oper_t<pbmsg_t*> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value, std::string* errmsg)
     {
         ref->SetAllocatedMessage(msg, value->get_msg(), field);
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, pbmsg_t* value)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, pbmsg_t* value, std::string* errmsg)
     {
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value, std::string* errmsg)
     {
         // ref->AddAllocatedMessage(msg, field, value);
     }
 
-    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
         return pbmsg_t::create(ref->MutableMessage(msg, field));
     }
 
-    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
         return pbmsg_t::create(ref->MutableRepeatedMessage(msg, field, idx));
     }
