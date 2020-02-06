@@ -60,7 +60,7 @@ public:
         file_error_collector_t error_collector;
         std::string parent, basename;
         split_file_name(file, parent, basename);
-        google::protobuf::compiler::DiskSourceTree source_tree;
+        static google::protobuf::compiler::DiskSourceTree source_tree;
         source_tree.MapPath("", "./");
         source_tree.MapPath("", parent);
         static google::protobuf::compiler::Importer importer(&source_tree, &error_collector);
@@ -75,7 +75,7 @@ public:
             return -3;
         }
 
-        static google::protobuf::DynamicMessageFactory factory(file_desc_ptr_->pool());
+        static google::protobuf::DynamicMessageFactory factory;
 
         desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msgtype);
         if (nullptr == desc_ptr_) {

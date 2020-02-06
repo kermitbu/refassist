@@ -56,7 +56,6 @@ int main(int argc, char* argv[])
 
         msg = addressbook->get_msg(true);
 
-        // reqdata 已经被添加到addressbook中了，不需要再次进行释放;
         delete addressbook;
     }
 
