@@ -64,6 +64,14 @@ int main(int argc, char* argv[])
         int syd = 0;
         addressbook->get_attr("syd", syd);
         printf("  get syd = %d\n", syd);
+        syd = 990;
+        addressbook->set_attr("syd", syd);
+        printf("  set syd = %d\n", syd);
+
+        int syd_get = 0;
+        addressbook->get_attr("syd", syd_get);
+        printf("  get syd = %d\n", syd_get);
+
         delete addressbook;
     }
 

@@ -45,36 +45,4 @@ message AddressBook {
 }
 // [END messages]
 
-message TestMessage {
-
-  message ReqData {
-    int32 tid = 1;
-    uint64 seq = 2;
-    string name = 3;
-  }
-
-  double doubleData = 1;
-  float floatData = 2;
-  int64 int64Data = 3;
-  uint64 uint64Data = 4;
-  int32 int32Data = 5;
-  fixed64 fixed64Data = 6;
-  fixed32 fixed32Data = 7;
-  bool boolData = 8;
-  string stringData = 9;
-  bytes bytesData = 10;
-  enum MT {
-    REQ = 0;
-    RSP = 1;
-    NTY = 2;
-  }
-  MT enumData = 11;
-  uint32 uint32Data = 12;
-  sfixed32 sfixed32Data = 13;
-  sfixed64 sfixed64Data = 14;
-  sint32 sint32Data = 15;
-  sint64 sint64Data = 16;
-
-}
-
 // [END messages]

@@ -65,14 +65,14 @@ public:
         source_tree.MapPath("", parent);
         static google::protobuf::compiler::Importer importer(&source_tree, &error_collector);
         file_desc_ptr_ = importer.Import(basename);
-        if (nullptr == file_desc_ptr_) {
-            return -2;
-        }
         if (!error_collector.text_.empty()) {
             if (errmsg) {
                 *errmsg = error_collector.text_;
             }
             return -3;
+        }    
+        if (nullptr == file_desc_ptr_) {
+            return -2;
         }
 
         static google::protobuf::DynamicMessageFactory factory;

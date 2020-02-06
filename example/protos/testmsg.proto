@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+message TestMessageA {
+  double price = 1;
+  int32 id = 2;
+  uint64 seq = 3;
+  string name = 4;
+}
+
+message TestMessageB {
+  double doubleData = 1;
+  float floatData = 2;
+  int64 int64Data = 3;
+  uint64 uint64Data = 4;
+  int32 int32Data = 5;
+  fixed64 fixed64Data = 6;
+  fixed32 fixed32Data = 7;
+  bool boolData = 8;
+  string stringData = 9;
+  bytes bytesData = 10;
+  enum MT {
+    REQ = 0;
+    RSP = 1;
+    NTY = 2;
+  }
+  MT enumData = 11;
+  uint32 uint32Data = 12;
+  sfixed32 sfixed32Data = 13;
+  sfixed64 sfixed64Data = 14;
+  sint32 sint32Data = 15;
+  sint64 sint64Data = 16;
+
+  message ReqData {
+    int32 tid = 1;
+    uint64 seq = 2;
+    string name = 3;
+  }
+  ReqData msgData = 17;
+
+///////////////////////////////////////////////////
+  repeated double doublerepeatedData = 18;
+  repeated float floatrepeatedData = 19;
+  repeated int64 int64repeatedData = 20;
+  repeated uint64 uint64repeatedData = 21;
+  repeated int32 int32repeatedData = 22;
+  repeated fixed64 fixed64repeatedData = 23;
+  repeated fixed32 fixed32repeatedData = 24;
+  repeated bool boolrepeatedData = 25;
+  repeated string stringrepeatedData = 26;
+  repeated bytes bytesrepeatedData = 27;
+  repeated MT enumrepeatedData = 28;
+  repeated uint32 uint32repeatedData = 29;
+  repeated sfixed32 sfixed32repeatedData = 30;
+  repeated sfixed64 sfixed64repeatedData = 31;
+  repeated sint32 sint32repeatedData = 32;
+  repeated sint64 sint64repeatedData = 33;
+  repeated ReqData msgrepeatedData = 34;
+}
