@@ -354,9 +354,15 @@ public:
         return 0;
     }
 
-    google::protobuf::Message* get_msg()
+    google::protobuf::Message* get_msg(bool standalone = false)
     {
-        return msg_ptr_;
+        google::protobuf::Message* ret = msg_ptr_;
+
+        if (standalone) {
+            ret = msg_ptr_->New();
+            ret->CopyFrom(*msg_ptr_);
+        }
+        return ret;
     }
 
     std::string get_bin()
