@@ -13,7 +13,7 @@ cd protobuf
 sh autogen.sh && ./configure && make
 cd -
 
-mkdir tmp && cd tmp
+mkdir build && cd build
 cmake ../build && make
 ```
 

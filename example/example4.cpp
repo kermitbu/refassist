@@ -5,6 +5,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+    printf("通过源码创建对象，然后获取复杂结构，之后赋值");
     printf(">>>对比创建嵌套类>>> \n");
     int tid = 112;
     std::string name = "buxk";

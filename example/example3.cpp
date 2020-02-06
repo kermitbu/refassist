@@ -5,6 +5,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+    printf("创建内置的结构体，并把内置结构设置到外部结构中");
     printf(">>>对比创建嵌套类>>> \n");
     int tid = 112;
     std::string name = "buxk";
@@ -34,9 +35,8 @@ int main(int argc, char* argv[])
         printf("通过反射创建对象 >>> \n");
 
         pbmsg_t* reqdata = pbmsg_t::create("../example/addressbook.proto", "AddressBook.req_data");
-        std::string errmsg;
-
-        reqdata->set_attr("tid", tid, &errmsg);
+  
+        reqdata->set_attr("tid", tid);
         printf("  set data.tid = %d\n", tid);
         reqdata->set_attr("name", name);
         printf("  set data.name = %s\n", name.c_str());
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
         addressbook->set_attr("syd", syd);
         printf("  set syd = %d\n", syd);
 
-        addressbook->set_attr("data", reqdata, &errmsg);
+        addressbook->set_attr("data", reqdata);
         std::string result = addressbook->get_bin();
 
         printf("-----------------\n  result length = %zu\n  ", result.length());
@@ -56,19 +56,7 @@ int main(int argc, char* argv[])
                  
         // reqdata 已经被添加到addressbook中了，不需要再次进行释放;
         delete addressbook;
-#if 0
-        std::string name_get;
-        addressbook->get_attr("data.name", name_get);
-        printf("  get data.name= %s\n", name_get.c_str());
 
-        int32_t tid_get;
-        addressbook->get_attr("data.tid", tid_get);
-        printf("  get data.tid= %d\n", tid_get);
-
-        int32_t syd_get;
-        addressbook->get_attr("syd_get", syd_get);
-        printf("  get syd_get= %d\n", syd_get);
-#endif
     }
     return 0;
 }

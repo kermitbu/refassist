@@ -16,17 +16,26 @@ public:
 
 class pbmsg_t final {
 public:
-    static pbmsg_t* create(const google::protobuf::Message* msg)
+    static pbmsg_t* create(google::protobuf::Message* msg, bool trusted=false)
     {
+        if(nullptr == msg) {
+            return nullptr;
+        }
+
         pbmsg_t* pbmsg = new (std::nothrow) pbmsg_t();
         if (nullptr == pbmsg) {
             return nullptr;
         }
-    
-        pbmsg->msg_ptr_ = msg->New();
-        pbmsg->msg_ptr_->CopyFrom(*msg);
-        pbmsg->desc_ptr_ = msg->GetDescriptor();
-        pbmsg->reflection_ptr_ = msg->GetReflection();
+        pbmsg->trusted_ = trusted;
+        if (pbmsg->trusted_) {
+            pbmsg->msg_ptr_ = msg;
+        } else {
+            pbmsg->msg_ptr_ = msg->New();
+            pbmsg->msg_ptr_->CopyFrom(*msg);
+        }
+
+        pbmsg->desc_ptr_ = pbmsg->msg_ptr_->GetDescriptor();
+        pbmsg->reflection_ptr_ = pbmsg->msg_ptr_->GetReflection();
 
         return pbmsg;
     }
@@ -56,7 +65,9 @@ public:
         source_tree.MapPath("", parent);
         importer_ptr_ = new (std::nothrow) google::protobuf::compiler::Importer(&source_tree, &error_collector);
         if (nullptr == importer_ptr_) {
-            if (errmsg) {*errmsg = "alloc importer failed!";}
+            if (errmsg) {
+                *errmsg = "alloc importer failed!";
+            }
             return -1;
         }
 
@@ -65,19 +76,25 @@ public:
             return -2;
         }
         if (!error_collector.text_.empty()) {
-            if (errmsg) {*errmsg = error_collector.text_;}
+            if (errmsg) {
+                *errmsg = error_collector.text_;
+            }
             return -3;
         }
 
         factory_ptr_ = new (std::nothrow) google::protobuf::DynamicMessageFactory(file_desc_ptr_->pool());
         if (nullptr == importer_ptr_) {
-            if (errmsg) {*errmsg = "alloc message factory failed!";}
+            if (errmsg) {
+                *errmsg = "alloc message factory failed!";
+            }
             return -4;
         }
 
         desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msgtype);
         if (nullptr == desc_ptr_) {
-            if (errmsg) {*errmsg = "alloc importer failed!"+ msgtype;}
+            if (errmsg) {
+                *errmsg = "alloc importer failed!" + msgtype;
+            }
             return -5;
         }
 
@@ -88,34 +105,67 @@ public:
         return 0;
     }
 
-    int set_attr(const std::string& name, const int32_t& value, std::string* errmsg = nullptr)
+    enum class attr_type {
+        DOUBLE = 1,
+        FLOAT = 2,
+        INT64 = 3,
+        UINT64 = 4,
+        INT32 = 5,
+        FIXED64 = 6,
+        FIXED32 = 7,
+        BOOL = 8,
+        STRING = 9,
+        GROUP = 10,
+        MESSAGE = 11,
+        BYTES = 12,
+        UINT32 = 13,
+        ENUM = 14,
+        SFIXED32 = 15,
+        SFIXED64 = 16,
+        SINT32 = 17,
+        SINT64 = 18,
+        MAX_TYPE = 18,
+    };
+
+    int set_attr(const std::string& name, const int32_t& value, attr_type type = attr_type::INT32, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
             return -1;
         }
 
-        reflection_ptr_->SetInt32(msg_ptr_, field, value);
-
+        if (type == attr_type::ENUM) {
+            reflection_ptr_->SetEnumValue(msg_ptr_, field, value);
+        } else {
+            reflection_ptr_->SetInt32(msg_ptr_, field, value);
+        }
         return 0;
     }
 
-    int get_attr(const std::string& name, int32_t& value, std::string* errmsg = nullptr)
+    int get_attr(const std::string& name, int32_t& value, attr_type type = attr_type::INT32, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetInt32(*msg_ptr_, field);
+        
+        if (type == attr_type::ENUM) {
+            value = reflection_ptr_->GetEnumValue(*msg_ptr_, field);
+        } else {
+            value = reflection_ptr_->GetInt32(*msg_ptr_, field);
+        }
         return 0;
     }
-
 
     int set_attr(const std::string& name, const uint32_t& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
             return -1;
         }
 
@@ -136,7 +186,9 @@ public:
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
             return -1;
         }
 
@@ -157,7 +209,9 @@ public:
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
             return -1;
         }
 
@@ -178,7 +232,9 @@ public:
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
             return -1;
         }
 
@@ -193,13 +249,15 @@ public:
         value = reflection_ptr_->GetFloat(*msg_ptr_, field);
         return 0;
     }
-    
+
     int set_attr(const std::string& name, const double& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
             return -1;
         }
 
@@ -220,7 +278,9 @@ public:
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
             return -1;
         }
 
@@ -236,13 +296,14 @@ public:
         return 0;
     }
 
-
     int set_attr(const std::string& name, const std::string& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
             return -1;
         }
 
@@ -258,13 +319,38 @@ public:
         return 0;
     }
 
+    int set_enum_attr(const std::string& name, const int32_t& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+
+        if (field->is_repeated()) {
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
+            return -1;
+        }
+
+        reflection_ptr_->SetEnumValue(msg_ptr_, field, value);
+
+        return 0;
+    }
+
+    int get_enum_attr(const std::string& name, int32_t& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        value = reflection_ptr_->GetEnumValue(*msg_ptr_, field);
+        return 0;
+    }
+
     int set_attr(const std::string& name, pbmsg_t* value, std::string* errmsg = nullptr)
     {
         google::protobuf::Message* submsg = value->get_msg();
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (field->is_repeated()) {
-            if (errmsg) {*errmsg = name + " is a repeated field!";}
+            if (errmsg) {
+                *errmsg = name + " is a repeated field!";
+            }
             return -1;
         }
 
@@ -276,8 +362,8 @@ public:
     int get_attr(const std::string& name, pbmsg_t** value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        auto& msg = reflection_ptr_->GetMessage(*msg_ptr_, field);
-        *value = pbmsg_t::create(&msg);
+        auto msg = reflection_ptr_->MutableMessage(msg_ptr_, field);
+        *value = pbmsg_t::create(msg);
         return 0;
     }
 
@@ -317,7 +403,7 @@ public:
             delete importer_ptr_;
         }
 
-        if (msg_ptr_ != nullptr) {
+        if (!trusted_ && msg_ptr_ != nullptr) {
             delete msg_ptr_;
         }
     }
@@ -341,6 +427,7 @@ private:
     }
 
 private:
+    bool trusted_{false};
     google::protobuf::compiler::Importer* importer_ptr_{ nullptr };
     const google::protobuf::FileDescriptor* file_desc_ptr_{ nullptr };
     google::protobuf::MessageFactory* factory_ptr_{ nullptr };

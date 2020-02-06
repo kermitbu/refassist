@@ -7,6 +7,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+    printf("通过proto文件创建对象，之后进行赋值");
     printf(">>>对比创建基础类>>> \n");
     int id = 233;
     std::string name = "buxk";
