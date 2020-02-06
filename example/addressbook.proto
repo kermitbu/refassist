@@ -44,5 +44,3 @@ message AddressBook {
   req_data data = 3;
 }
 // [END messages]
-
-// [END messages]

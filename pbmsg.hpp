@@ -14,11 +14,43 @@ public:
     }
 };
 
+using google::protobuf::FieldDescriptor;
+using google::protobuf::Message;
+using google::protobuf::Reflection;
+
+template <typename T1>
+struct field_oper_t {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, T1 value)
+    {
+        ref->SetInt32(msg, field, value);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, T1 value)
+    {
+        ref->SetRepeatedInt32(msg, field, idx, value);
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, T1 value)
+    {
+        ref->AddInt32(msg, field, value);
+    }
+
+    T1 get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return ref->GetInt32(*msg, field);
+    }
+
+    T1 get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return ref->GetRepeatedInt32(*msg, field, idx);
+    }
+};
+
 class pbmsg_t final {
 public:
-    static pbmsg_t* create(google::protobuf::Message* msg, bool trusted=false)
+    static pbmsg_t* create(google::protobuf::Message* msg, bool trusted = false)
     {
-        if(nullptr == msg) {
+        if (nullptr == msg) {
             return nullptr;
         }
 
@@ -69,8 +101,8 @@ public:
             if (errmsg) {
                 *errmsg = error_collector.text_;
             }
-            return -3;
-        }    
+            return -1;
+        }
         if (nullptr == file_desc_ptr_) {
             return -2;
         }
@@ -82,7 +114,7 @@ public:
             if (errmsg) {
                 *errmsg = "alloc importer failed!" + msgtype;
             }
-            return -5;
+            return -3;
         }
 
         msg_ptr_ = factory.GetPrototype(desc_ptr_)->New();
@@ -114,243 +146,126 @@ public:
         MAX_TYPE = 18,
     };
 
-    int set_attr(const std::string& name, const int32_t& value, attr_type type = attr_type::INT32, std::string* errmsg = nullptr)
+    template <typename T1>
+    int set_attr(const std::string& name, const T1& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        if (nullptr == field) {
+            if (errmsg) {
+                *errmsg = name + " is a nonexistent field!";
+            }
+            return -1;
+        }
 
         if (field->is_repeated()) {
             if (errmsg) {
                 *errmsg = name + " is a repeated field!";
             }
-            return -1;
+            return -2;
         }
 
-        if (type == attr_type::ENUM) {
-            reflection_ptr_->SetEnumValue(msg_ptr_, field, value);
-        } else {
-            reflection_ptr_->SetInt32(msg_ptr_, field, value);
-        }
+        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, value);
+
         return 0;
     }
 
-    int get_attr(const std::string& name, int32_t& value, attr_type type = attr_type::INT32, std::string* errmsg = nullptr)
+    template <typename T1>
+    int get_attr(const std::string& name, T1& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        
-        if (type == attr_type::ENUM) {
-            value = reflection_ptr_->GetEnumValue(*msg_ptr_, field);
-        } else {
-            value = reflection_ptr_->GetInt32(*msg_ptr_, field);
-        }
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const uint32_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
+        if (nullptr == field) {
             if (errmsg) {
-                *errmsg = name + " is a repeated field!";
+                *errmsg = name + " is a nonexistent field!";
             }
             return -1;
         }
 
-        reflection_ptr_->SetUInt32(msg_ptr_, field, value);
+        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field);
 
         return 0;
     }
 
-    int get_attr(const std::string& name, uint32_t& value, std::string* errmsg = nullptr)
+    template <typename T1>
+    int add_attr(const std::string& name, const int64_t& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetUInt32(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const int64_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
+        if (nullptr == field) {
             if (errmsg) {
-                *errmsg = name + " is a repeated field!";
+                *errmsg = name + " is a nonexistent field!";
             }
             return -1;
         }
 
-        reflection_ptr_->SetInt64(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, int64_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetInt64(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const uint64_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
+        if (!field->is_repeated()) {
             if (errmsg) {
-                *errmsg = name + " is a repeated field!";
+                *errmsg = name + " is't a repeated field!";
+            }
+            return -2;
+        }
+
+        field_oper_t<T1>().add(reflection_ptr_, msg_ptr_, field);
+
+        return 0;
+    }
+
+    template <typename T1>
+    int set_attr(const std::string& name, int idx, const T1& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        if (nullptr == field) {
+            if (errmsg) {
+                *errmsg = name + " is a nonexistent field!";
             }
             return -1;
         }
 
-        reflection_ptr_->SetUInt64(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, uint64_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetUInt64(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const float& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
+        if (!field->is_repeated()) {
             if (errmsg) {
-                *errmsg = name + " is a repeated field!";
+                *errmsg = name + " is't a repeated field!";
+            }
+            return -2;
+        }
+
+        int maxsize = reflection_ptr_->FieldSize(*msg_ptr_, field);
+        if (idx >= maxsize) {
+            if (errmsg) {
+                *errmsg = name + " out-of-bounds access, max idx is " + std::to_string(maxsize);
+            }
+            return -3;
+        }
+
+        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, idx, value);
+
+        return 0;
+    }
+
+    template <typename T1>
+    int get_attr(const std::string& name, int idx, T1& value, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        if (nullptr == field) {
+            if (errmsg) {
+                *errmsg = name + " is a nonexistent field!";
             }
             return -1;
         }
 
-        reflection_ptr_->SetFloat(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, float& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetFloat(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const double& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
+        if (!field->is_repeated()) {
             if (errmsg) {
-                *errmsg = name + " is a repeated field!";
+                *errmsg = name + " is't a repeated field!";
             }
-            return -1;
+            return -2;
         }
 
-        reflection_ptr_->SetDouble(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, double& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetDouble(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const bool& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
+        int maxsize = reflection_ptr_->FieldSize(*msg_ptr_, field);
+        if (idx >= maxsize) {
             if (errmsg) {
-                *errmsg = name + " is a repeated field!";
+                *errmsg = name + " out-of-bounds access, max idx is " + std::to_string(maxsize);
             }
-            return -1;
+            return -3;
         }
 
-        reflection_ptr_->SetBool(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, bool& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetBool(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const std::string& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetString(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, std::string& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetString(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_enum_attr(const std::string& name, const int32_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetEnumValue(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_enum_attr(const std::string& name, int32_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetEnumValue(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, pbmsg_t* value, std::string* errmsg = nullptr)
-    {
-        google::protobuf::Message* submsg = value->get_msg();
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetAllocatedMessage(msg_ptr_, submsg, field);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, pbmsg_t** value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        auto msg = reflection_ptr_->MutableMessage(msg_ptr_, field);
-        *value = pbmsg_t::create(msg);
+        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, idx);
         return 0;
     }
 
@@ -416,9 +331,306 @@ private:
     }
 
 private:
-    bool trusted_{false};
+    bool trusted_{ false };
     const google::protobuf::FileDescriptor* file_desc_ptr_{ nullptr };
     const google::protobuf::Descriptor* desc_ptr_{ nullptr };
     const google::protobuf::Reflection* reflection_ptr_{ nullptr };
     google::protobuf::Message* msg_ptr_{ nullptr };
+};
+
+template <>
+struct field_oper_t<int32_t> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int32_t value)
+    {
+        if (field->type() == FieldDescriptor::TYPE_ENUM) {
+            ref->SetEnumValue(msg, field, value);
+        } else {
+            ref->SetInt32(msg, field, value);
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, int32_t value)
+    {
+        if (field->type() == FieldDescriptor::TYPE_ENUM) {
+            ref->SetRepeatedEnumValue(msg, field, idx, value);
+        } else {
+            ref->SetRepeatedInt32(msg, field, idx, value);
+        }
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, int32_t value)
+    {
+        if (field->type() == FieldDescriptor::TYPE_ENUM) {
+            ref->AddEnumValue(msg, field, value);
+        } else {
+            ref->AddInt32(msg, field, value);
+        }
+    }
+
+    int32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        if (field->type() == FieldDescriptor::TYPE_ENUM) {
+            return ref->GetEnumValue(*msg, field);
+        }
+        return ref->GetInt32(*msg, field);
+    }
+
+    int32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        if (field->type() == FieldDescriptor::TYPE_ENUM) {
+            return ref->GetRepeatedEnumValue(*msg, field, idx);
+        }
+        return ref->GetRepeatedInt32(*msg, field, idx);
+    }
+};
+
+template <>
+struct field_oper_t<uint32_t> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint32_t value)
+    {
+        ref->SetUInt32(msg, field, value);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, uint32_t value)
+    {
+        ref->SetRepeatedUInt32(msg, field, idx, value);
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint32_t value)
+    {
+        ref->AddUInt32(msg, field, value);
+    }
+
+    uint32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return ref->GetUInt32(*msg, field);
+    }
+
+    uint32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return ref->GetRepeatedUInt32(*msg, field, idx);
+    }
+};
+
+template <>
+struct field_oper_t<int64_t> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int64_t value)
+    {
+        ref->SetInt64(msg, field, value);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, int64_t value)
+    {
+        ref->SetRepeatedInt64(msg, field, idx, value);
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, int64_t value)
+    {
+        ref->AddInt64(msg, field, value);
+    }
+
+    int64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return ref->GetInt64(*msg, field);
+    }
+
+    int64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return ref->GetRepeatedInt64(*msg, field, idx);
+    }
+};
+
+template <>
+struct field_oper_t<uint64_t> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint64_t value)
+    {
+        ref->SetUInt64(msg, field, value);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, uint64_t value)
+    {
+        ref->SetRepeatedUInt64(msg, field, idx, value);
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint64_t value)
+    {
+        ref->AddUInt64(msg, field, value);
+    }
+
+    uint64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return ref->GetUInt64(*msg, field);
+    }
+
+    uint64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return ref->GetRepeatedUInt64(*msg, field, idx);
+    }
+};
+
+template <>
+struct field_oper_t<float> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, float value)
+    {
+        ref->SetFloat(msg, field, value);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, float value)
+    {
+        ref->SetRepeatedFloat(msg, field, idx, value);
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, float value)
+    {
+        ref->AddFloat(msg, field, value);
+    }
+
+    float get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return ref->GetFloat(*msg, field);
+    }
+
+    float get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return ref->GetRepeatedFloat(*msg, field, idx);
+    }
+};
+
+template <>
+struct field_oper_t<double> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, double value)
+    {
+        ref->SetDouble(msg, field, value);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, double value)
+    {
+        ref->SetRepeatedDouble(msg, field, idx, value);
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, double value)
+    {
+        ref->AddDouble(msg, field, value);
+    }
+
+    double get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return ref->GetDouble(*msg, field);
+    }
+
+    double get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return ref->GetRepeatedDouble(*msg, field, idx);
+    }
+};
+
+template <>
+struct field_oper_t<bool> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, bool value)
+    {
+        ref->SetBool(msg, field, value);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, bool value)
+    {
+        ref->SetRepeatedBool(msg, field, idx, value);
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, bool value)
+    {
+        ref->AddBool(msg, field, value);
+    }
+
+    bool get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return ref->GetBool(*msg, field);
+    }
+
+    bool get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return ref->GetRepeatedBool(*msg, field, idx);
+    }
+};
+
+template <>
+struct field_oper_t<std::string> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string value)
+    {
+        ref->SetString(msg, field, value);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string value)
+    {
+        ref->SetRepeatedString(msg, field, idx, value);
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string value)
+    {
+        ref->AddString(msg, field, value);
+    }
+
+    std::string get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return ref->GetString(*msg, field);
+    }
+
+    std::string get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return ref->GetRepeatedString(*msg, field, idx);
+    }
+};
+
+//////////////////////
+template <>
+struct field_oper_t<Message*> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value)
+    {
+        ref->SetAllocatedMessage(msg, value, field);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, Message* value)
+    {
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value)
+    {
+        ref->AddAllocatedMessage(msg, field, value);
+    }
+
+    Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return ref->MutableMessage(msg, field);
+    }
+
+    Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return ref->MutableRepeatedMessage(msg, field, idx);
+    }
+};
+
+template <>
+struct field_oper_t<pbmsg_t*> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value)
+    {
+        ref->SetAllocatedMessage(msg, value->get_msg(), field);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, pbmsg_t* value)
+    {
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value)
+    {
+        // ref->AddAllocatedMessage(msg, field, value);
+    }
+
+    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
+    {
+        return pbmsg_t::create(ref->MutableMessage(msg, field));
+    }
+
+    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
+    {
+        return pbmsg_t::create(ref->MutableRepeatedMessage(msg, field, idx));
+    }
 };
