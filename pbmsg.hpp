@@ -41,13 +41,13 @@ struct field_oper_t {
     T get(const Reflection* ref, Message* msg, const FieldDescriptor* field)
     {
         assert(field->type() == FieldDescriptor::TYPE_ENUM);  
-        return ref->GetEnumValue(*msg, field);
+        return T(ref->GetEnumValue(*msg, field));
     }
 
     T get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx)
     {
         assert(field->type() == FieldDescriptor::TYPE_ENUM); 
-        return ref->GetRepeatedEnumValue(*msg, field, idx);
+        return T(ref->GetRepeatedEnumValue(*msg, field, idx));
     }
 };
 class pbmsg_t final {
