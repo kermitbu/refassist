@@ -5,7 +5,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    printf("创建内置的结构体，并把内置结构设置到外部结构中");
+    printf("创建内置的结构体，并把内置结构设置到外部结构中\n");
     printf(">>>对比创建嵌套类>>> \n");
     int tid = 112;
     std::string name = "buxk";

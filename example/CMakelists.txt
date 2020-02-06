@@ -9,10 +9,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../protobuf/src)
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../protobuf/src/.libs)
 
 set(EX1_SRC_LIST example1.cpp addressbook.pb.cc)
-
 set(EX2_SRC_LIST example2.cpp addressbook.pb.cc)
 set(EX3_SRC_LIST example3.cpp addressbook.pb.cc)
 set(EX4_SRC_LIST example4.cpp addressbook.pb.cc)
+set(EX5_SRC_LIST example5.cpp addressbook.pb.cc)
 
 link_libraries(protobuf pthread)
 
@@ -20,5 +20,6 @@ add_executable(ex1 ${EX1_SRC_LIST})
 add_executable(ex2 ${EX2_SRC_LIST})
 add_executable(ex3 ${EX3_SRC_LIST})
 add_executable(ex4 ${EX4_SRC_LIST})
+add_executable(ex5 ${EX5_SRC_LIST})
 
 

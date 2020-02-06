@@ -7,7 +7,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    printf("通过已有PB对象创建，之后进行赋值");
+    printf("通过已有PB对象创建，之后进行赋值\n");
     printf(">>>对比创建基础类>>> \n");
     int id = 233;
     std::string name = "buxk";

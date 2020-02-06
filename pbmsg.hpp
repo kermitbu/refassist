@@ -63,15 +63,8 @@ public:
         google::protobuf::compiler::DiskSourceTree source_tree;
         source_tree.MapPath("", "./");
         source_tree.MapPath("", parent);
-        importer_ptr_ = new (std::nothrow) google::protobuf::compiler::Importer(&source_tree, &error_collector);
-        if (nullptr == importer_ptr_) {
-            if (errmsg) {
-                *errmsg = "alloc importer failed!";
-            }
-            return -1;
-        }
-
-        file_desc_ptr_ = importer_ptr_->Import(basename);
+        static google::protobuf::compiler::Importer importer(&source_tree, &error_collector);
+        file_desc_ptr_ = importer.Import(basename);
         if (nullptr == file_desc_ptr_) {
             return -2;
         }
@@ -82,13 +75,7 @@ public:
             return -3;
         }
 
-        factory_ptr_ = new (std::nothrow) google::protobuf::DynamicMessageFactory(file_desc_ptr_->pool());
-        if (nullptr == importer_ptr_) {
-            if (errmsg) {
-                *errmsg = "alloc message factory failed!";
-            }
-            return -4;
-        }
+        static google::protobuf::DynamicMessageFactory factory(file_desc_ptr_->pool());
 
         desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msgtype);
         if (nullptr == desc_ptr_) {
@@ -98,7 +85,7 @@ public:
             return -5;
         }
 
-        msg_ptr_ = factory_ptr_->GetPrototype(desc_ptr_)->New();
+        msg_ptr_ = factory.GetPrototype(desc_ptr_)->New();
 
         reflection_ptr_ = msg_ptr_->GetReflection();
 
@@ -399,10 +386,6 @@ public:
 
     ~pbmsg_t()
     {
-        if (importer_ptr_ != nullptr) {
-            delete importer_ptr_;
-        }
-
         if (!trusted_ && msg_ptr_ != nullptr) {
             delete msg_ptr_;
         }
@@ -428,9 +411,7 @@ private:
 
 private:
     bool trusted_{false};
-    google::protobuf::compiler::Importer* importer_ptr_{ nullptr };
     const google::protobuf::FileDescriptor* file_desc_ptr_{ nullptr };
-    google::protobuf::MessageFactory* factory_ptr_{ nullptr };
     const google::protobuf::Descriptor* desc_ptr_{ nullptr };
     const google::protobuf::Reflection* reflection_ptr_{ nullptr };
     google::protobuf::Message* msg_ptr_{ nullptr };
