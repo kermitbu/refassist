@@ -13,15 +13,18 @@ set(EX2_SRC_LIST example2.cpp addressbook.pb.cc)
 set(EX3_SRC_LIST example3.cpp addressbook.pb.cc)
 set(EX4_SRC_LIST example4.cpp addressbook.pb.cc)
 set(EX5_SRC_LIST example5.cpp addressbook.pb.cc)
-set(EX6_SRC_LIST example6.cpp addressbook.pb.cc)
+set(EX6_SRC_LIST example6.cpp)
+set(EX7_SRC_LIST example7.cpp)
 
 link_libraries(protobuf pthread)
 
-add_executable(ex1 ${EX1_SRC_LIST})
-add_executable(ex2 ${EX2_SRC_LIST})
-add_executable(ex3 ${EX3_SRC_LIST})
-add_executable(ex4 ${EX4_SRC_LIST})
-add_executable(ex5 ${EX5_SRC_LIST})
-add_executable(ex6 ${EX6_SRC_LIST})
+# add_executable(ex1 ${EX1_SRC_LIST})
+# add_executable(ex2 ${EX2_SRC_LIST})
+# add_executable(ex3 ${EX3_SRC_LIST})
+# add_executable(ex4 ${EX4_SRC_LIST})
+# add_executable(ex5 ${EX5_SRC_LIST})
+# add_executable(ex6 ${EX6_SRC_LIST})
+add_executable(ex7 ${EX7_SRC_LIST})
+
 
 
