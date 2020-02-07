@@ -90,7 +90,7 @@ public:
      * @param trusted 是否托管PB对象指针，false会复制出一份，true直接使用外部传入的PB对象
      * @return pbmsg_t* 分配好的pbmsg_t指针
      * 
-     * @note 当trusted为true的时候，需要注意外部的msg生命周期应该比pbmsg_t生命周期长。
+     * @attention 当trusted为true的时候，需要注意外部的msg生命周期应该比pbmsg_t生命周期长。
      */
     static pbmsg_t* create(google::protobuf::Message* msg, bool trusted = false)
     {
