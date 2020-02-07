@@ -4,11 +4,12 @@ set(CMAKE_CXX_FLAGS "-Wall -O0 -g -std=c++11 -fno-access-control" )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../example/protos)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../protobuf/src)
 
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../protobuf/src/.libs)
 
-set(SRC_LIST test.cpp)
+set(SRC_LIST test.cpp ../example/protos/testmsg.pb.cc)
 
 link_libraries(libprotobuf.a)
 

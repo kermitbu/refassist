@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
         new_addressbook->set_attr("syd", syd_get);
         printf("  get syd = %d\n", syd_get);
 
-        pbmsg_t* data;
-        new_addressbook->get_attr("data", &data);
+        pbmsg_t* data = nullptr;
+        new_addressbook->get_attr("data", data);
 
         std::string name_get;
         data->get_attr("name", name_get);

@@ -1,8 +1,10 @@
-#include <new>
-
 #include "google/protobuf/compiler/importer.h"
 #include "google/protobuf/dynamic_message.h"
 #include "google/protobuf/message.h"
+#include <cassert>
+#include <new>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-value"
 
 class file_error_collector_t : public google::protobuf::compiler::MultiFileErrorCollector {
 public:
@@ -14,8 +16,58 @@ public:
     }
 };
 
+using google::protobuf::FieldDescriptor;
+using google::protobuf::Message;
+using google::protobuf::Reflection;
+
+template <typename T>
+struct field_oper_t {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value, std::string* errmsg)
+    {
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
+        ref->SetEnumValue(msg, field, value);
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, T value, std::string* errmsg)
+    {
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
+        ref->SetRepeatedEnumValue(msg, field, idx, value);
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value, std::string* errmsg)
+    {
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
+        ref->AddEnumValue(msg, field, value);
+    }
+
+    T get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
+        return T(ref->GetEnumValue(*msg, field));
+    }
+
+    T get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        assert(field->type() == FieldDescriptor::TYPE_ENUM);
+        return T(ref->GetRepeatedEnumValue(*msg, field, idx));
+    }
+};
+
+/**
+ * @brief 
+ * 
+ */
 class pbmsg_t final {
 public:
+    /**
+     * @brief 通过已有的PB对象指针创建pbmsg_t对象
+     * 
+     * @param msg 一个PB对象的指针
+     * @param trusted 是否托管PB对象指针，false会复制出一份，true直接使用外部传入的PB对象
+     * @return pbmsg_t* 分配好的pbmsg_t指针
+     * 
+     * @note 当trusted为true的时候，需要注意外部的msg生命周期应该比pbmsg_t生命周期长。
+     */
     static pbmsg_t* create(google::protobuf::Message* msg, bool trusted = false)
     {
         if (nullptr == msg) {
@@ -40,6 +92,15 @@ public:
         return pbmsg;
     }
 
+    /**
+     * @brief 通过proto文件创建分配pbmsg_t对象
+     * 
+     * @param file 带路径的PROTO文件名
+     * @param msgtype PROTO文件中定义的消息名
+     * @return pbmsg_t* 分配好的pbmsg_t指针
+     * 
+     * @note 嵌套的消息用'.'进行分隔, 例如msga.msgb表示在msga内部定义的msgb
+     */
     static pbmsg_t* create(const std::string& file, const std::string& msgtype)
     {
         pbmsg_t* pbmsg = new (std::nothrow) pbmsg_t();
@@ -55,6 +116,16 @@ public:
         return pbmsg;
     }
 
+    /**
+     * @brief 导入PROTO文件，并创建指定的消息
+     * 
+     * @param file 带路径的PROTO文件名
+     * @param msgtype PROTO文件中定义的消息名
+     * @param errmsg 错误信息
+     * @return int 导入是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
     int import(const std::string& file, const std::string& msgtype, std::string* errmsg = nullptr)
     {
         file_error_collector_t error_collector;
@@ -92,29 +163,19 @@ public:
         return 0;
     }
 
-    enum class attr_type {
-        DOUBLE = 1,
-        FLOAT = 2,
-        INT64 = 3,
-        UINT64 = 4,
-        INT32 = 5,
-        FIXED64 = 6,
-        FIXED32 = 7,
-        BOOL = 8,
-        STRING = 9,
-        GROUP = 10,
-        MESSAGE = 11,
-        BYTES = 12,
-        UINT32 = 13,
-        ENUM = 14,
-        SFIXED32 = 15,
-        SFIXED64 = 16,
-        SINT32 = 17,
-        SINT64 = 18,
-        MAX_TYPE = 18,
-    };
-
-    int set_attr(const std::string& name, const int32_t& value, attr_type type = attr_type::INT32, std::string* errmsg = nullptr)
+    /**
+     * @brief 设置指定域的数据
+     * 
+     * @tparam T1 
+     * @param name 指定设置域的名 
+     * @param value 指定设置域的值
+     * @param errmsg 错误信息
+     * @return int 设置参数是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
+    template <typename T1>
+    int set_attr(const std::string& name, const T1& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
         if (nullptr == field) {
@@ -131,15 +192,24 @@ public:
             return -2;
         }
 
-        if (type == attr_type::ENUM) {
-            reflection_ptr_->SetEnumValue(msg_ptr_, field, value);
-        } else {
-            reflection_ptr_->SetInt32(msg_ptr_, field, value);
-        }
+        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, value, errmsg);
+
         return 0;
     }
 
-    int get_attr(const std::string& name, int32_t& value, attr_type type = attr_type::INT32, std::string* errmsg = nullptr)
+    /**
+     * @brief 获取指定域的数据
+     * 
+     * @tparam T1 
+     * @param name 指定获取域的名 
+     * @param value 指定获取域的值
+     * @param errmsg 错误信息
+     * @return int 获取域是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
+    template <typename T1>
+    int get_attr(const std::string& name, T1& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
         if (nullptr == field) {
@@ -149,15 +219,24 @@ public:
             return -1;
         }
 
-        if (type == attr_type::ENUM) {
-            value = reflection_ptr_->GetEnumValue(*msg_ptr_, field);
-        } else {
-            value = reflection_ptr_->GetInt32(*msg_ptr_, field);
-        }
+        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, errmsg);
+
         return 0;
     }
 
-    int set_attr(const std::string& name, const uint32_t& value, std::string* errmsg = nullptr)
+    /**
+     * @brief 为repeated数据添加一条新记录
+     * 
+     * @tparam T1 
+     * @param name 指定添加数据的域名 
+     * @param value 指定添加数据的值
+     * @param errmsg 错误信息
+     * @return int 指定域添加数据是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
+    template <typename T1>
+    int add_attr(const std::string& name, const T1& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
         if (nullptr == field) {
@@ -166,244 +245,47 @@ public:
             }
             return -1;
         }
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetUInt32(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, uint32_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        if (nullptr == field) {
-            if (errmsg) {
-                *errmsg = name + " is a nonexistent field!";
-            }
-            return -1;
-        }
-
-        value = reflection_ptr_->GetUInt32(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const int64_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetInt64(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, int64_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetInt64(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const uint64_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetUInt64(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, uint64_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetUInt64(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const float& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetFloat(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, float& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetFloat(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const double& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetDouble(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, double& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetDouble(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const bool& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetBool(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, bool& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetBool(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, const std::string& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetString(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, std::string& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetString(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_enum_attr(const std::string& name, const int32_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetEnumValue(msg_ptr_, field, value);
-
-        return 0;
-    }
-
-    int get_enum_attr(const std::string& name, int32_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        value = reflection_ptr_->GetEnumValue(*msg_ptr_, field);
-        return 0;
-    }
-
-    int set_attr(const std::string& name, pbmsg_t* value, std::string* errmsg = nullptr)
-    {
-        google::protobuf::Message* submsg = value->get_msg();
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-
-        if (field->is_repeated()) {
-            if (errmsg) {
-                *errmsg = name + " is a repeated field!";
-            }
-            return -1;
-        }
-
-        reflection_ptr_->SetAllocatedMessage(msg_ptr_, submsg, field);
-
-        return 0;
-    }
-
-    int get_attr(const std::string& name, pbmsg_t** value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
-        auto msg = reflection_ptr_->MutableMessage(msg_ptr_, field);
-        *value = pbmsg_t::create(msg);
-        return 0;
-    }
-
-    int add_attr(const std::string& name, const int64_t& value, std::string* errmsg = nullptr)
-    {
-        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
 
         if (!field->is_repeated()) {
             if (errmsg) {
                 *errmsg = name + " is't a repeated field!";
             }
-            return -1;
+            return -2;
         }
 
-        reflection_ptr_->AddInt64(msg_ptr_, field, value);
+        field_oper_t<T1>().add(reflection_ptr_, msg_ptr_, field, value, errmsg);
 
         return 0;
     }
 
-    int set_attr(const std::string& name, int idx, const int64_t& value, std::string* errmsg = nullptr)
+    /**
+     * @brief 修改repeated数据中指定索引的记录
+     * 
+     * @tparam T1 
+     * @param name 指定数据的域名 
+     * @param idx 指定记录的索引
+     * @param value 指定数据的值
+     * @param errmsg 错误信息
+     * @return int 设置指定索引的数据是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
+    template <typename T1>
+    int set_attr(const std::string& name, int idx, const T1& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        if (nullptr == field) {
+            if (errmsg) {
+                *errmsg = name + " is a nonexistent field!";
+            }
+            return -1;
+        }
 
         if (!field->is_repeated()) {
             if (errmsg) {
                 *errmsg = name + " is't a repeated field!";
             }
-            return -1;
+            return -2;
         }
 
         int maxsize = reflection_ptr_->FieldSize(*msg_ptr_, field);
@@ -411,28 +293,65 @@ public:
             if (errmsg) {
                 *errmsg = name + " out-of-bounds access, max idx is " + std::to_string(maxsize);
             }
-            return -2;
+            return -3;
         }
 
-        reflection_ptr_->SetRepeatedInt64(msg_ptr_, field, idx, value);
+        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, idx, value, errmsg);
 
         return 0;
     }
 
-    int get_attr(const std::string& name, int idx, int64_t& value, std::string* errmsg = nullptr)
+    
+    /**
+     * @brief 获取repeated数据中指定索引的记录
+     * 
+     * @tparam T1 
+     * @param name 指定数据的域名 
+     * @param idx 指定记录的索引
+     * @param value 获取到的数据的值
+     * @param errmsg 错误信息
+     * @return int 获取指定索引的数据是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
+    template <typename T1>
+    int get_attr(const std::string& name, int idx, T1& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        if (nullptr == field) {
+            if (errmsg) {
+                *errmsg = name + " is a nonexistent field!";
+            }
+            return -1;
+        }
+
+        if (!field->is_repeated()) {
+            if (errmsg) {
+                *errmsg = name + " is't a repeated field!";
+            }
+            return -2;
+        }
+
         int maxsize = reflection_ptr_->FieldSize(*msg_ptr_, field);
         if (idx >= maxsize) {
             if (errmsg) {
                 *errmsg = name + " out-of-bounds access, max idx is " + std::to_string(maxsize);
             }
-            return -2;
+            return -3;
         }
-        value = reflection_ptr_->GetRepeatedInt64(*msg_ptr_, field, idx);
+
+        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, idx, errmsg);
         return 0;
     }
 
+    /**
+     * @brief 获取一个PB消息的指针
+     * 
+     * @param standalone 是否获取有独立生命周期的PB指针
+     * @return google::protobuf::Message* 获取到的消息指针
+     * 
+     * @note standalone为true时获取到独立于pbmsg_t的PB指针，需要调用者主动调用delete进行释放
+     */
     google::protobuf::Message* get_msg(bool standalone = false)
     {
         google::protobuf::Message* ret = msg_ptr_;
@@ -444,6 +363,11 @@ public:
         return ret;
     }
 
+    /**
+     * @brief 获取到一个PB序列化之后的二进制数据
+     * 
+     * @return std::string 序列化的二进制序列
+     */
     std::string get_bin()
     {
         std::string str;
@@ -452,14 +376,18 @@ public:
         return str;
     }
 
+    /**
+     * @brief 使用一个PB二进制数据设置pbmsg_t
+     * 
+     * @param pbdata 序列化的PB二进制数据
+     * @return int 设置是否成功
+     */
     int set_bin(std::string& pbdata)
     {
         return msg_ptr_->ParseFromString(pbdata) ? 0 : -1;
     }
 
-    pbmsg_t()
-    {
-    }
+    pbmsg_t() = default;
 
     pbmsg_t(const pbmsg_t& pbmsg)
     {
@@ -501,3 +429,879 @@ private:
     const google::protobuf::Reflection* reflection_ptr_{ nullptr };
     google::protobuf::Message* msg_ptr_{ nullptr };
 };
+
+template <>
+struct field_oper_t<int32_t> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int32_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ref->SetEnumValue(msg, field, value);
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
+            ref->SetInt32(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, int32_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ref->SetRepeatedEnumValue(msg, field, idx, value);
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
+            ref->SetRepeatedInt32(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, int32_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ref->AddEnumValue(msg, field, value);
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
+            ref->AddInt32(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    int32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        int32_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ret = ref->GetEnumValue(*msg, field);
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
+            ret = ref->GetInt32(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    int32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        int32_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ret = ref->GetRepeatedEnumValue(*msg, field, idx);
+            break;
+        case FieldDescriptor::TYPE_INT32:
+        case FieldDescriptor::TYPE_SINT32:
+        case FieldDescriptor::TYPE_SFIXED32:
+            ret = ref->GetRepeatedInt32(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+
+        return ret;
+    }
+};
+
+template <>
+struct field_oper_t<uint32_t> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint32_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ref->SetEnumValue(msg, field, int(value));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+            ref->SetUInt32(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, uint32_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ref->SetRepeatedEnumValue(msg, field, idx, int(value));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+
+            ref->SetRepeatedUInt32(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint32_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ref->AddEnumValue(msg, field, int(value));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+            ref->AddUInt32(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    uint32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        uint32_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ret = uint32_t(ref->GetEnumValue(*msg, field));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+            ret = ref->GetUInt32(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    uint32_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        uint32_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_ENUM:
+            ret = uint32_t(ref->GetRepeatedEnumValue(*msg, field, idx));
+            break;
+        case FieldDescriptor::TYPE_UINT32:
+        case FieldDescriptor::TYPE_FIXED32:
+            ret = ref->GetRepeatedUInt32(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+};
+
+template <>
+struct field_oper_t<int64_t> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int64_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ref->SetInt64(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, int64_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ref->SetRepeatedInt64(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, int64_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ref->AddInt64(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    int64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        int64_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ret = ref->GetInt64(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    int64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        int64_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_INT64:
+        case FieldDescriptor::TYPE_SINT64:
+        case FieldDescriptor::TYPE_SFIXED64:
+            ret = ref->GetRepeatedInt64(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+};
+
+template <>
+struct field_oper_t<uint64_t> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint64_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ref->SetUInt64(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, uint64_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ref->SetRepeatedUInt64(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, uint64_t value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ref->AddUInt64(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    uint64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        uint64_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ret = ref->GetUInt64(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    uint64_t get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        uint64_t ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_UINT64:
+        case FieldDescriptor::TYPE_FIXED64:
+            ret = ref->GetRepeatedUInt64(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+};
+
+template <>
+struct field_oper_t<float> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, float value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+            ref->SetFloat(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, float value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+            ref->SetRepeatedFloat(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, float value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+            ref->AddFloat(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    float get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        float ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+            ret = ref->GetFloat(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    float get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        float ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_FLOAT:
+        case FieldDescriptor::TYPE_DOUBLE:
+
+            ret = ref->GetRepeatedFloat(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+};
+
+template <>
+struct field_oper_t<double> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, double value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_DOUBLE:
+            ref->SetDouble(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, double value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_DOUBLE:
+            ref->SetRepeatedDouble(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, double value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_DOUBLE:
+            ref->AddDouble(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    double get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        double ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_DOUBLE:
+            ret = ref->GetDouble(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    double get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        double ret = 0;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_DOUBLE:
+
+            ret = ref->GetRepeatedDouble(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+};
+
+template <>
+struct field_oper_t<bool> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, bool value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_BOOL:
+            ref->SetBool(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, bool value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_BOOL:
+            ref->SetRepeatedBool(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, bool value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_BOOL:
+            ref->AddBool(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    bool get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        bool ret = false;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_BOOL:
+            ret = ref->GetBool(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    bool get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        bool ret = false;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_BOOL:
+            ret = ref->GetRepeatedBool(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+};
+
+template <>
+struct field_oper_t<std::string> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_STRING:
+        case FieldDescriptor::TYPE_BYTES:
+            ref->SetString(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_STRING:
+        case FieldDescriptor::TYPE_BYTES:
+            ref->SetRepeatedString(msg, field, idx, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_STRING:
+        case FieldDescriptor::TYPE_BYTES:
+            ref->AddString(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    std::string get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        std::string ret;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_STRING:
+        case FieldDescriptor::TYPE_BYTES:
+            ret = ref->GetString(*msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    std::string get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        std::string ret;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_STRING:
+        case FieldDescriptor::TYPE_BYTES:
+            ret = ref->GetRepeatedString(*msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+};
+
+//////////////////////
+template <>
+struct field_oper_t<Message*> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+        ref->SetAllocatedMessage(msg, value, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, Message* value, std::string* errmsg)
+    {
+        
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value, std::string* errmsg)
+    {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+        ref->AddAllocatedMessage(msg, field, value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {      
+        Message* ret;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+            ret = ref->MutableMessage(msg, field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {    
+        Message* ret;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+        return ref->MutableRepeatedMessage(msg, field, idx);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+};
+
+template <>
+struct field_oper_t<pbmsg_t*> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value, std::string* errmsg)
+    {
+         switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+        ref->SetAllocatedMessage(msg, value->get_msg(), field);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, pbmsg_t* value, std::string* errmsg)
+    {
+    }
+
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value, std::string* errmsg)
+    {
+         switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+        ref->AddAllocatedMessage(msg, field,value->get_msg());
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+    }
+
+    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
+    {
+        pbmsg_t* ret;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+            ret = pbmsg_t::create(ref->MutableMessage(msg, field));
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+
+    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
+    {
+        pbmsg_t* ret;
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+            ret = pbmsg_t::create(ref->MutableRepeatedMessage(msg, field, idx));
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
+        return ret;
+    }
+};
+
+#pragma GCC diagnostic pop
