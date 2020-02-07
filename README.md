@@ -7,7 +7,7 @@ pbmsg is a wrapper around protobuf reflection usage, making reflection easier to
 
 #### Get the example code
 ```bash
-git clone https://gitee.com/kermitbuxk/pbmsg.git
+git clone https://github.com/kermitbu/pbmsg.git
 git submodule init
 git submodule update
 ```
