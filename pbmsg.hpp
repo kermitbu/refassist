@@ -52,8 +52,22 @@ struct field_oper_t {
         return T(ref->GetRepeatedEnumValue(*msg, field, idx));
     }
 };
+
+/**
+ * @brief 
+ * 
+ */
 class pbmsg_t final {
 public:
+    /**
+     * @brief 通过已有的PB对象指针创建pbmsg_t对象
+     * 
+     * @param msg 一个PB对象的指针
+     * @param trusted 是否托管PB对象指针，false会复制出一份，true直接使用外部传入的PB对象
+     * @return pbmsg_t* 分配好的pbmsg_t指针
+     * 
+     * @note 当trusted为true的时候，需要注意外部的msg生命周期应该比pbmsg_t生命周期长。
+     */
     static pbmsg_t* create(google::protobuf::Message* msg, bool trusted = false)
     {
         if (nullptr == msg) {
@@ -78,6 +92,15 @@ public:
         return pbmsg;
     }
 
+    /**
+     * @brief 通过proto文件创建分配pbmsg_t对象
+     * 
+     * @param file 带路径的PROTO文件名
+     * @param msgtype PROTO文件中定义的消息名
+     * @return pbmsg_t* 分配好的pbmsg_t指针
+     * 
+     * @note 嵌套的消息用'.'进行分隔, 例如msga.msgb表示在msga内部定义的msgb
+     */
     static pbmsg_t* create(const std::string& file, const std::string& msgtype)
     {
         pbmsg_t* pbmsg = new (std::nothrow) pbmsg_t();
@@ -93,6 +116,16 @@ public:
         return pbmsg;
     }
 
+    /**
+     * @brief 导入PROTO文件，并创建指定的消息
+     * 
+     * @param file 带路径的PROTO文件名
+     * @param msgtype PROTO文件中定义的消息名
+     * @param errmsg 错误信息
+     * @return int 导入是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
     int import(const std::string& file, const std::string& msgtype, std::string* errmsg = nullptr)
     {
         file_error_collector_t error_collector;
@@ -130,6 +163,17 @@ public:
         return 0;
     }
 
+    /**
+     * @brief 设置指定域的数据
+     * 
+     * @tparam T1 
+     * @param name 指定设置域的名 
+     * @param value 指定设置域的值
+     * @param errmsg 错误信息
+     * @return int 设置参数是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
     template <typename T1>
     int set_attr(const std::string& name, const T1& value, std::string* errmsg = nullptr)
     {
@@ -153,6 +197,17 @@ public:
         return 0;
     }
 
+    /**
+     * @brief 获取指定域的数据
+     * 
+     * @tparam T1 
+     * @param name 指定获取域的名 
+     * @param value 指定获取域的值
+     * @param errmsg 错误信息
+     * @return int 获取域是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
     template <typename T1>
     int get_attr(const std::string& name, T1& value, std::string* errmsg = nullptr)
     {
@@ -169,6 +224,17 @@ public:
         return 0;
     }
 
+    /**
+     * @brief 为repeated数据添加一条新记录
+     * 
+     * @tparam T1 
+     * @param name 指定添加数据的域名 
+     * @param value 指定添加数据的值
+     * @param errmsg 错误信息
+     * @return int 指定域添加数据是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
     template <typename T1>
     int add_attr(const std::string& name, const T1& value, std::string* errmsg = nullptr)
     {
@@ -192,6 +258,18 @@ public:
         return 0;
     }
 
+    /**
+     * @brief 修改repeated数据中指定索引的记录
+     * 
+     * @tparam T1 
+     * @param name 指定数据的域名 
+     * @param idx 指定记录的索引
+     * @param value 指定数据的值
+     * @param errmsg 错误信息
+     * @return int 设置指定索引的数据是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
     template <typename T1>
     int set_attr(const std::string& name, int idx, const T1& value, std::string* errmsg = nullptr)
     {
@@ -223,6 +301,19 @@ public:
         return 0;
     }
 
+    
+    /**
+     * @brief 获取repeated数据中指定索引的记录
+     * 
+     * @tparam T1 
+     * @param name 指定数据的域名 
+     * @param idx 指定记录的索引
+     * @param value 获取到的数据的值
+     * @param errmsg 错误信息
+     * @return int 获取指定索引的数据是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
     template <typename T1>
     int get_attr(const std::string& name, int idx, T1& value, std::string* errmsg = nullptr)
     {
@@ -253,6 +344,14 @@ public:
         return 0;
     }
 
+    /**
+     * @brief 获取一个PB消息的指针
+     * 
+     * @param standalone 是否获取有独立生命周期的PB指针
+     * @return google::protobuf::Message* 获取到的消息指针
+     * 
+     * @note standalone为true时获取到独立于pbmsg_t的PB指针，需要调用者主动调用delete进行释放
+     */
     google::protobuf::Message* get_msg(bool standalone = false)
     {
         google::protobuf::Message* ret = msg_ptr_;
@@ -264,6 +363,11 @@ public:
         return ret;
     }
 
+    /**
+     * @brief 获取到一个PB序列化之后的二进制数据
+     * 
+     * @return std::string 序列化的二进制序列
+     */
     std::string get_bin()
     {
         std::string str;
@@ -272,14 +376,18 @@ public:
         return str;
     }
 
+    /**
+     * @brief 使用一个PB二进制数据设置pbmsg_t
+     * 
+     * @param pbdata 序列化的PB二进制数据
+     * @return int 设置是否成功
+     */
     int set_bin(std::string& pbdata)
     {
         return msg_ptr_->ParseFromString(pbdata) ? 0 : -1;
     }
 
-    pbmsg_t()
-    {
-    }
+    pbmsg_t() = default;
 
     pbmsg_t(const pbmsg_t& pbmsg)
     {
