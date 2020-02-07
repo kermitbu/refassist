@@ -225,7 +225,6 @@ public:
         field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, value, &err);
         if (errmsg) {
             *errmsg = err;
-            return -3;
         }
 
         return err.empty() ? 0 : -3;
@@ -257,7 +256,6 @@ public:
         value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, &err);
         if (errmsg) {
             *errmsg = err;
-            return -3;
         }
 
         return err.empty() ? 0 : -3;
@@ -296,7 +294,6 @@ public:
         field_oper_t<T1>().add(reflection_ptr_, msg_ptr_, field, value, &err);
         if (errmsg) {
             *errmsg = err;
-            return -3;
         }
 
         return err.empty() ? 0 : -3;
@@ -344,7 +341,6 @@ public:
         field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, idx, value, &err);
         if (errmsg) {
             *errmsg = err;
-            return -3;
         }
 
         return err.empty() ? 0 : -3;
@@ -392,7 +388,6 @@ public:
         value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, idx, &err);
         if (errmsg) {
             *errmsg = err;
-            return -3;
         }
 
         return err.empty() ? 0 : -3;
