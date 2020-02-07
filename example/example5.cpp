@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
         addressbook->set_attr("syd", syd);
         printf("  set syd = %d\n", syd);
 
-        addressbook->set_attr("data", reqdata);
+        addressbook->set_attr("data", reqdata->get_msg());
         std::string result = addressbook->get_bin();
 
         printf("-----------------\n  result length = %zu\n  ", result.length());

@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
         int id = 990;
         person->set_attr("id", id);
         printf("  set new id = %d\n", id);
-        addressbook->add_attr("people", person);
+        addressbook->add_attr("people", person->get_msg());
 
         std::string result = addressbook->get_bin();
         printf("-----------------\n  result length = %zu\n  ", result.length());
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         person2->set_attr("email", email);
         printf("  set new email= %s\n", email.c_str());
 
-        addressbook->set_attr("people", 0, person2);
+        addressbook->set_attr("people", 0, person2->get_msg());
 
         result = addressbook->get_bin();
         printf("-----------------\n  result length = %zu\n  ", result.length());
