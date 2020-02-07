@@ -29,6 +29,7 @@ struct field_oper_t {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
             assert(("value type and field type do not match", false));
+            return;
         }
         ref->SetEnumValue(msg, field, value);
     }
@@ -40,6 +41,7 @@ struct field_oper_t {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
             assert(("value type and field type do not match", false));
+            return;
         }
 
         ref->SetRepeatedEnumValue(msg, field, idx, value);
@@ -52,6 +54,7 @@ struct field_oper_t {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
             assert(("value type and field type do not match", false));
+            return;
         }
 
         ref->AddEnumValue(msg, field, value);
@@ -64,6 +67,7 @@ struct field_oper_t {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
             assert(("value type and field type do not match", false));
+            return T();
         }
 
         return T(ref->GetEnumValue(*msg, field));
@@ -76,6 +80,7 @@ struct field_oper_t {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
             assert(("value type and field type do not match", false));
+            return T();
         }
 
         return T(ref->GetRepeatedEnumValue(*msg, field, idx));
