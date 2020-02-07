@@ -408,6 +408,29 @@ public:
     }
 
     /**
+     * @brief 清理指定域的数据
+     * 
+     * @param name 指定数据的域名
+     * @param errmsg 错误信息
+     * @return int 清理是否成功
+     * 
+     * @note 当返回值不为0时，把错误信息填入到errmsg中，如不关注错误信息则可以忽略errmsg参数
+     */
+    int clear_attr(const std::string& name, std::string* errmsg = nullptr)
+    {
+        const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
+        if (nullptr == field) {
+            if (errmsg) {
+                *errmsg = name + " is a non-existent field!";
+            }
+            return -1;
+        }
+
+        reflection_ptr_->ClearField(msg_ptr_, field);
+        return 0;
+    }
+
+    /**
      * @brief 获取一个PB消息的指针
      * 
      * @param standalone 是否获取有独立生命周期的PB指针
