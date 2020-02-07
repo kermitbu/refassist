@@ -1,5 +1,5 @@
-#include "addressbook.pb.h"
 #include "pbmsg.hpp"
+#include "testmsg.pb.h"
 #include <cstdio>
 #include <iostream>
 
@@ -86,6 +86,33 @@ int main(int argc, char* argv[])
 
         delete pbmsga;
     }
+    ///////////////////////////////////////////////////////////////////
+    
+    printf("通过PB源码创建的对象来创建对象，之后进行赋值, 再次获取出数值\n");
+    {
+        TestMessageB msg;
+        pbmsg_t* pbmsga = pbmsg_t::create(&msg);
+
+        double doubleData = 100.32;
+        pbmsga->set_attr("doubleData", doubleData);
+        printf("  set doubleData= %lf\n", doubleData);
+
+        int64_t int64Data = 100;
+        pbmsga->set_attr("int64Data", int64Data);
+        printf("  set int64Data= %ld\n", int64Data);
+        
+        double get_doubleData = 0.0;
+        pbmsga->get_attr("doubleData", get_doubleData);
+        printf("  get doubleData= %lf\n", get_doubleData);
+
+        int64_t get_int64Data = 0;
+        pbmsga->get_attr("doubleData", get_int64Data);
+        printf("  get doubleData= %ld\n", get_int64Data);
+
+        delete pbmsga;
+    }
+
+
 
     return 0;
 }

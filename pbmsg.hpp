@@ -3,6 +3,8 @@
 #include "google/protobuf/message.h"
 #include <cassert>
 #include <new>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-value"
 
 class file_error_collector_t : public google::protobuf::compiler::MultiFileErrorCollector {
 public:
@@ -335,9 +337,9 @@ struct field_oper_t<int32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -355,9 +357,9 @@ struct field_oper_t<int32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -375,9 +377,9 @@ struct field_oper_t<int32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -396,9 +398,9 @@ struct field_oper_t<int32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -418,9 +420,9 @@ struct field_oper_t<int32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
 
@@ -442,9 +444,9 @@ struct field_oper_t<uint32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -462,9 +464,9 @@ struct field_oper_t<uint32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -481,9 +483,9 @@ struct field_oper_t<uint32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -501,9 +503,9 @@ struct field_oper_t<uint32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -522,9 +524,9 @@ struct field_oper_t<uint32_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -543,9 +545,9 @@ struct field_oper_t<int64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -560,9 +562,9 @@ struct field_oper_t<int64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -577,9 +579,9 @@ struct field_oper_t<int64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -595,9 +597,9 @@ struct field_oper_t<int64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -614,9 +616,9 @@ struct field_oper_t<int64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -634,9 +636,9 @@ struct field_oper_t<uint64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -650,9 +652,9 @@ struct field_oper_t<uint64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -666,9 +668,9 @@ struct field_oper_t<uint64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -683,9 +685,9 @@ struct field_oper_t<uint64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -701,9 +703,9 @@ struct field_oper_t<uint64_t> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -721,9 +723,9 @@ struct field_oper_t<float> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -737,9 +739,9 @@ struct field_oper_t<float> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -753,9 +755,9 @@ struct field_oper_t<float> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -770,9 +772,9 @@ struct field_oper_t<float> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -789,9 +791,9 @@ struct field_oper_t<float> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -808,9 +810,9 @@ struct field_oper_t<double> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -823,9 +825,9 @@ struct field_oper_t<double> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -838,9 +840,9 @@ struct field_oper_t<double> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -854,9 +856,9 @@ struct field_oper_t<double> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -872,9 +874,9 @@ struct field_oper_t<double> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -891,9 +893,9 @@ struct field_oper_t<bool> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -906,9 +908,9 @@ struct field_oper_t<bool> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -921,9 +923,9 @@ struct field_oper_t<bool> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -937,9 +939,9 @@ struct field_oper_t<bool> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -954,9 +956,9 @@ struct field_oper_t<bool> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -974,9 +976,9 @@ struct field_oper_t<std::string> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -990,9 +992,9 @@ struct field_oper_t<std::string> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -1006,9 +1008,9 @@ struct field_oper_t<std::string> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -1023,9 +1025,9 @@ struct field_oper_t<std::string> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -1041,9 +1043,9 @@ struct field_oper_t<std::string> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -1061,9 +1063,9 @@ struct field_oper_t<Message*> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -1081,9 +1083,9 @@ struct field_oper_t<Message*> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -1097,9 +1099,9 @@ struct field_oper_t<Message*> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -1114,9 +1116,9 @@ struct field_oper_t<Message*> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -1133,9 +1135,9 @@ struct field_oper_t<pbmsg_t*> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -1152,9 +1154,9 @@ struct field_oper_t<pbmsg_t*> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
     }
@@ -1168,9 +1170,9 @@ struct field_oper_t<pbmsg_t*> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
@@ -1185,11 +1187,13 @@ struct field_oper_t<pbmsg_t*> {
             break;
         default:
             if (errmsg) {
-                *errmsg = "Mismatched data type, field type is %s" + std::string(field->type_name());
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
-            assert(false);
+            assert(("value type and field type do not match", false));
             break;
         }
         return ret;
     }
 };
+
+#pragma GCC diagnostic pop
