@@ -24,7 +24,7 @@ template <typename T>
 struct field_oper_t {
     void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value, std::string* errmsg)
     {
-        if (field->type() != FieldDescriptor::TYPE_ENUM){
+        if (field->type() != FieldDescriptor::TYPE_ENUM) {
             if (errmsg) {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
@@ -34,8 +34,8 @@ struct field_oper_t {
     }
 
     void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, T value, std::string* errmsg)
-    {   
-        if (field->type() != FieldDescriptor::TYPE_ENUM){
+    {
+        if (field->type() != FieldDescriptor::TYPE_ENUM) {
             if (errmsg) {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
@@ -46,8 +46,8 @@ struct field_oper_t {
     }
 
     void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, T value, std::string* errmsg)
-    {        
-        if (field->type() != FieldDescriptor::TYPE_ENUM){
+    {
+        if (field->type() != FieldDescriptor::TYPE_ENUM) {
             if (errmsg) {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
@@ -59,19 +59,19 @@ struct field_oper_t {
 
     T get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
-        if (field->type() != FieldDescriptor::TYPE_ENUM){
+        if (field->type() != FieldDescriptor::TYPE_ENUM) {
             if (errmsg) {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
             assert(("value type and field type do not match", false));
         }
 
-        return T(ref->GetEnumValue(*msg, field)); 
+        return T(ref->GetEnumValue(*msg, field));
     }
 
     T get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
-        if (field->type() != FieldDescriptor::TYPE_ENUM){
+        if (field->type() != FieldDescriptor::TYPE_ENUM) {
             if (errmsg) {
                 *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
             }
@@ -221,9 +221,14 @@ public:
             return -2;
         }
 
-        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, value, errmsg);
+        std::string err;
+        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, value, &err);
+        if (errmsg) {
+            *errmsg = err;
+            return -3;
+        }
 
-        return 0;
+        return err.empty() ? 0 : -3;
     }
 
     /**
@@ -248,9 +253,14 @@ public:
             return -1;
         }
 
-        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, errmsg);
+        std::string err;
+        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, &err);
+        if (errmsg) {
+            *errmsg = err;
+            return -3;
+        }
 
-        return 0;
+        return err.empty() ? 0 : -3;
     }
 
     /**
@@ -282,9 +292,14 @@ public:
             return -2;
         }
 
-        field_oper_t<T1>().add(reflection_ptr_, msg_ptr_, field, value, errmsg);
+        std::string err;
+        field_oper_t<T1>().add(reflection_ptr_, msg_ptr_, field, value, &err);
+        if (errmsg) {
+            *errmsg = err;
+            return -3;
+        }
 
-        return 0;
+        return err.empty() ? 0 : -3;
     }
 
     /**
@@ -325,9 +340,14 @@ public:
             return -3;
         }
 
-        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, idx, value, errmsg);
+        std::string err;
+        field_oper_t<T1>().set(reflection_ptr_, msg_ptr_, field, idx, value, &err);
+        if (errmsg) {
+            *errmsg = err;
+            return -3;
+        }
 
-        return 0;
+        return err.empty() ? 0 : -3;
     }
 
     /**
@@ -368,8 +388,14 @@ public:
             return -3;
         }
 
-        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, idx, errmsg);
-        return 0;
+        std::string err;
+        value = field_oper_t<T1>().get(reflection_ptr_, msg_ptr_, field, idx, &err);
+        if (errmsg) {
+            *errmsg = err;
+            return -3;
+        }
+
+        return err.empty() ? 0 : -3;
     }
 
     /**
