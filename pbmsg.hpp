@@ -172,6 +172,9 @@ public:
             return -1;
         }
         if (nullptr == file_desc_ptr_) {
+            if (errmsg) {
+                *errmsg = "import proto file failed!";
+            }
             return -2;
         }
 
@@ -180,12 +183,18 @@ public:
         desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msgtype);
         if (nullptr == desc_ptr_) {
             if (errmsg) {
-                *errmsg = "alloc importer failed!" + msgtype;
+                *errmsg = msgtype + " was not found!";
             }
             return -3;
         }
 
         msg_ptr_ = factory.GetPrototype(desc_ptr_)->New();
+        if (nullptr == msg_ptr_) {
+            if (errmsg) {
+                *errmsg = "alloc msg failed!";
+            }
+            return -4;
+        }
 
         reflection_ptr_ = msg_ptr_->GetReflection();
 
