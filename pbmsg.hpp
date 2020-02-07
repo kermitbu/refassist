@@ -1243,6 +1243,17 @@ struct field_oper_t<Message*> {
 
     void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, Message* value, std::string* errmsg)
     {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+            ref->MutableRepeatedMessage(msg, field, idx)->CopyFrom(*value);
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
     }
 
     void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value, std::string* errmsg)
@@ -1262,7 +1273,7 @@ struct field_oper_t<Message*> {
 
     Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
-        Message* ret;
+        Message* ret = nullptr;
         switch (field->type()) {
         case FieldDescriptor::TYPE_MESSAGE:
             ret = ref->MutableMessage(msg, field);
@@ -1279,7 +1290,7 @@ struct field_oper_t<Message*> {
 
     Message* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
-        Message* ret;
+        Message* ret = nullptr;
         switch (field->type()) {
         case FieldDescriptor::TYPE_MESSAGE:
             return ref->MutableRepeatedMessage(msg, field, idx);
@@ -1314,6 +1325,17 @@ struct field_oper_t<pbmsg_t*> {
 
     void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, pbmsg_t* value, std::string* errmsg)
     {
+        switch (field->type()) {
+        case FieldDescriptor::TYPE_MESSAGE:
+            ref->MutableRepeatedMessage(msg, field, idx)->CopyFrom(*value->get_msg());
+            break;
+        default:
+            if (errmsg) {
+                *errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
+            }
+            assert(("value type and field type do not match", false));
+            break;
+        }
     }
 
     void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value, std::string* errmsg)
@@ -1333,7 +1355,7 @@ struct field_oper_t<pbmsg_t*> {
 
     pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string* errmsg)
     {
-        pbmsg_t* ret;
+        pbmsg_t* ret = nullptr;
         switch (field->type()) {
         case FieldDescriptor::TYPE_MESSAGE:
             ret = pbmsg_t::create(ref->MutableMessage(msg, field));
@@ -1350,7 +1372,7 @@ struct field_oper_t<pbmsg_t*> {
 
     pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string* errmsg)
     {
-        pbmsg_t* ret;
+        pbmsg_t* ret = nullptr;
         switch (field->type()) {
         case FieldDescriptor::TYPE_MESSAGE:
             ret = pbmsg_t::create(ref->MutableRepeatedMessage(msg, field, idx));

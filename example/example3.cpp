@@ -44,10 +44,35 @@ int main(int argc, char* argv[])
         pbmsg_t* addressbook = pbmsg_t::create("../example/addressbook.proto", "AddressBook");
         addressbook->set_attr("syd", syd);
         printf("  set syd = %d\n", syd);
-
         addressbook->set_attr("data", reqdata);
-        std::string result = addressbook->get_bin();
 
+
+        pbmsg_t* person = pbmsg_t::create("../example/addressbook.proto", "Person");
+        name = "kermit";
+        person->set_attr("name", name);
+        printf("  set new name= %s\n", name.c_str());
+        std::string email = "38272702@qq.com";
+        person->set_attr("email", email);
+        printf("  set new email= %s\n", email.c_str());
+        int id = 990;
+        person->set_attr("id", id);
+        printf("  set new id = %d\n", id);
+        addressbook->add_attr("people", person);
+
+        std::string result = addressbook->get_bin();
+        printf("-----------------\n  result length = %zu\n  ", result.length());
+        for (std::string::size_type i = 0; i < result.length(); i++) {
+            printf("%02x ", result[i]);
+        }
+
+        pbmsg_t* person2 = pbmsg_t::create("../example/addressbook.proto", "Person");
+        email = "kermit.bu@qq.com";
+        person2->set_attr("email", email);
+        printf("  set new email= %s\n", email.c_str());
+
+        addressbook->set_attr("people", 0, person2);
+
+        result = addressbook->get_bin();
         printf("-----------------\n  result length = %zu\n  ", result.length());
         for (std::string::size_type i = 0; i < result.length(); i++) {
             printf("%02x ", result[i]);
