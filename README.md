@@ -1,65 +1,63 @@
 # pbmsg
 
-#### 介绍
+#### Description
 
-pbmsg是一个对protobuf反射用法的一个封装，使反射更易用。
+pbmsg is a wrapper around protobuf reflection usage, making reflection easier to use.
 
 
-#### 获取示例代码和编译
-
+#### Get the example code
 ```bash
 # 获取代码
 git clone https://gitee.com/kermitbuxk/pbmsg.git
 git submodule init
 git submodule update
+```
 
-# 编译protobuf
+#### Compile example code
+```bash
 cd protobuf
 sh autogen.sh && ./configure && make
 cd -
 
-# 编译示例代码
 mkdir build && cd build
 cmake ../build && make
 ```
 
-#### 使用说明
+#### Instructions
 
 ```cpp
-// 包含pbmsg.hpp头文件
 #include "pbmsg.hpp"
 
-// 根据proto文件创建一个对象
+// alloc a pbmsg
 auto pbmsg = pbmsg_t::create("../example/addressbook.proto", "Person");
 
-// 设置属性值
+// set attr
 pbmsg->set_attr("name", std::string("kermit"));
 pbmsg->set_attr("id", 1203);
 
-// 获取序列化后的二进制流
+// get pb binary
 auto result = pbmsg->get_bin();
 
-// 获取独立生命周期的的Message的指针
-// 如果传入false则是获取内部的Message，不需要外部释放
+// get pb message
 auto msg = pbmsg->get_msg(true);
 
-// 获取属性值
+// get attr
 std::string name;
 pbmsg->get_attr("name", name);
 int32_t id = 0;
 pbmsg->get_attr("id", id);
 
-// 清理属性值
+// clear attr
 pbmsg->clear_attr("id", id);
 
-// 释放分配的空间
+// dealloc buffer
 delete msg;
 delete pbmsg;
 ```
 
-#### 参与贡献
+#### Contribution
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+1.  Fork the repository
+2.  Create Feat_xxx branch
+3.  Commit your code
+4.  Create Pull Request
