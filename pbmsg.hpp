@@ -54,7 +54,7 @@ struct field_oper_t {
 };
 
 /**
- * @brief 
+ * @brief 利用PB反射操作数据的封装
  * 
  */
 class pbmsg_t final {
