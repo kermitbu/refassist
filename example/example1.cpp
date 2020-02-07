@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
         printf("  get doubleData= %lf\n", get_doubleData);
 
         int64_t get_int64Data = 0;
-        pbmsga->get_attr("doubleData", get_int64Data);
+        pbmsga->get_attr("int64Data", get_int64Data);
         printf("  get doubleData= %ld\n", get_int64Data);
 
         delete pbmsga;

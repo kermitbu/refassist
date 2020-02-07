@@ -170,7 +170,7 @@ public:
     }
 
     template <typename T1>
-    int add_attr(const std::string& name, const int64_t& value, std::string* errmsg = nullptr)
+    int add_attr(const std::string& name, const T1& value, std::string* errmsg = nullptr)
     {
         const google::protobuf::FieldDescriptor* field = desc_ptr_->FindFieldByName(name);
         if (nullptr == field) {
@@ -187,7 +187,7 @@ public:
             return -2;
         }
 
-        field_oper_t<T1>().add(reflection_ptr_, msg_ptr_, field, errmsg);
+        field_oper_t<T1>().add(reflection_ptr_, msg_ptr_, field, value, errmsg);
 
         return 0;
     }

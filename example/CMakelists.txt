@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_CXX_FLAGS "-Wall -O0 -g -std=c++11" )  
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/protos)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../protobuf/src)
 
@@ -18,13 +19,13 @@ set(EX7_SRC_LIST example7.cpp)
 
 link_libraries(protobuf pthread)
 
- add_executable(ex1 ${EX1_SRC_LIST})
-# add_executable(ex2 ${EX2_SRC_LIST})
-# add_executable(ex3 ${EX3_SRC_LIST})
-# add_executable(ex4 ${EX4_SRC_LIST})
-# add_executable(ex5 ${EX5_SRC_LIST})
-# add_executable(ex6 ${EX6_SRC_LIST})
-#add_executable(ex7 ${EX7_SRC_LIST})
+add_executable(ex1 ${EX1_SRC_LIST})
+add_executable(ex2 ${EX2_SRC_LIST})
+add_executable(ex3 ${EX3_SRC_LIST})
+add_executable(ex4 ${EX4_SRC_LIST})
+add_executable(ex5 ${EX5_SRC_LIST})
+add_executable(ex6 ${EX6_SRC_LIST})
+add_executable(ex7 ${EX7_SRC_LIST})
 
 
 
