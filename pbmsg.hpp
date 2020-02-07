@@ -152,48 +152,50 @@ public:
      */
     int import(const std::string& file, const std::string& msgtype, std::string* errmsg = nullptr)
     {
-        file_error_collector_t error_collector;
-        std::string parent, basename;
-        split_file_name(file, parent, basename);
-        static google::protobuf::compiler::DiskSourceTree source_tree;
-        source_tree.MapPath("", "./");
-        source_tree.MapPath("", parent);
-        static google::protobuf::compiler::Importer importer(&source_tree, &error_collector);
-        file_desc_ptr_ = importer.Import(basename);
-        if (!error_collector.text_.empty()) {
-            if (errmsg) {
-                *errmsg = error_collector.text_;
+        int ret = 0;
+        do {
+            file_error_collector_t error_collector;
+            std::string parent, basename;
+            split_file_name(file, parent, basename);
+            static google::protobuf::compiler::DiskSourceTree source_tree;
+            source_tree.MapPath("", "./");
+            source_tree.MapPath("", parent);
+            static google::protobuf::compiler::Importer importer(&source_tree, &error_collector);
+            file_desc_ptr_ = importer.Import(basename);
+            if (!error_collector.text_.empty()) {
+                error_msg_ = error_collector.text_;
+                ret = -1;
+                break;
             }
-            return -1;
-        }
-        if (nullptr == file_desc_ptr_) {
-            if (errmsg) {
-                *errmsg = "import proto file failed!";
+            if (nullptr == file_desc_ptr_) {
+                error_msg_ = "import proto file failed!";
+                ret = -2;
+                break;
             }
-            return -2;
-        }
 
-        static google::protobuf::DynamicMessageFactory factory;
+            static google::protobuf::DynamicMessageFactory factory;
 
-        desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msgtype);
-        if (nullptr == desc_ptr_) {
-            if (errmsg) {
-                *errmsg = msgtype + " was not found!";
+            desc_ptr_ = file_desc_ptr_->pool()->FindMessageTypeByName(msgtype);
+            if (nullptr == desc_ptr_) {
+                error_msg_ = msgtype + " was not found!";
+                ret = -3;
+                break;
             }
-            return -3;
-        }
 
-        msg_ptr_ = factory.GetPrototype(desc_ptr_)->New();
-        if (nullptr == msg_ptr_) {
-            if (errmsg) {
-                *errmsg = "alloc msg failed!";
+            msg_ptr_ = factory.GetPrototype(desc_ptr_)->New();
+            if (nullptr == msg_ptr_) {
+                error_msg_ = "alloc msg failed!";
+                ret = -4;
+                break;
             }
-            return -4;
+            reflection_ptr_ = msg_ptr_->GetReflection();
+        } while (0);
+
+        if (errmsg) {
+            *errmsg = error_msg_;
         }
 
-        reflection_ptr_ = msg_ptr_->GetReflection();
-
-        return 0;
+        return ret;
     }
 
     /**
@@ -699,7 +701,6 @@ struct field_oper_t<uint32_t> {
             break;
         case FieldDescriptor::TYPE_UINT32:
         case FieldDescriptor::TYPE_FIXED32:
-
             ref->SetRepeatedUInt32(msg, field, idx, value);
             break;
         default:
@@ -985,7 +986,6 @@ struct field_oper_t<float> {
         float ret = 0;
         switch (field->type()) {
         case FieldDescriptor::TYPE_FLOAT:
-
             ret = ref->GetRepeatedFloat(*msg, field, idx);
             break;
         default:
@@ -1058,7 +1058,6 @@ struct field_oper_t<double> {
         double ret = 0;
         switch (field->type()) {
         case FieldDescriptor::TYPE_DOUBLE:
-
             ret = ref->GetRepeatedDouble(*msg, field, idx);
             break;
         default:
@@ -1219,7 +1218,6 @@ struct field_oper_t<std::string> {
     }
 };
 
-//////////////////////
 template <>
 struct field_oper_t<Message*> {
     void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, Message* value, std::string& errmsg)
