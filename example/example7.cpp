@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
     // 在一个程序中创建来自两个proto文件的结构，静态成员不影响。
     {
         printf("通过反射创建对象 >>> \n");
-        pbmsg_t* pbmsga = pbmsg_t::create("../example/protos/testmsg.proto", "TestMessageB");
+        kermit::refassist_t* pbmsga = kermit::refassist_t::create("../example/protos/testmsg.proto", "TestMessageB");
 
         int64_t int64data = 234;
 

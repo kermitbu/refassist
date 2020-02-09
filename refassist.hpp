@@ -6,6 +6,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-value"
 
+namespace kermit {
 class file_error_collector_t : public google::protobuf::compiler::MultiFileErrorCollector {
 public:
     std::string text_;
@@ -81,24 +82,24 @@ struct field_oper_t {
  * @brief 利用PB反射操作数据的封装
  * 
  */
-class pbmsg_t final {
+class refassist_t final {
 public:
     /**
      * @brief 通过已有的PB对象指针创建pbmsg_t对象
      * 
      * @param msg 一个PB对象的指针
      * @param trusted 是否托管PB对象指针，false会复制出一份，true直接使用外部传入的PB对象
-     * @return pbmsg_t* 分配好的pbmsg_t指针
+     * @return refassist_t* 分配好的pbmsg_t指针
      * 
      * @attention 当trusted为true的时候，需要注意外部的msg生命周期应该比pbmsg_t生命周期长。
      */
-    static pbmsg_t* create(google::protobuf::Message* msg, bool trusted = false)
+    static refassist_t* create(google::protobuf::Message* msg, bool trusted = false)
     {
         if (nullptr == msg) {
             return nullptr;
         }
 
-        pbmsg_t* pbmsg = new (std::nothrow) pbmsg_t();
+        refassist_t* pbmsg = new (std::nothrow) refassist_t();
         if (nullptr == pbmsg) {
             return nullptr;
         }
@@ -121,13 +122,13 @@ public:
      * 
      * @param file 带路径的PROTO文件名
      * @param msgtype PROTO文件中定义的消息名
-     * @return pbmsg_t* 分配好的pbmsg_t指针
+     * @return refassist_t* 分配好的pbmsg_t指针
      * 
      * @note 嵌套的消息用'.'进行分隔, 例如msga.msgb表示在msga内部定义的msgb
      */
-    static pbmsg_t* create(const std::string& file, const std::string& msgtype)
+    static refassist_t* create(const std::string& file, const std::string& msgtype)
     {
-        pbmsg_t* pbmsg = new (std::nothrow) pbmsg_t();
+        refassist_t* pbmsg = new (std::nothrow) refassist_t();
         if (nullptr == pbmsg) {
             return nullptr;
         }
@@ -532,9 +533,9 @@ public:
         return msg_ptr_->ParseFromString(pbdata) ? 0 : -1;
     }
 
-    pbmsg_t() = default;
+    refassist_t() = default;
 
-    pbmsg_t(const pbmsg_t& pbmsg)
+    refassist_t(const refassist_t& pbmsg)
     {
         msg_ptr_ = pbmsg.msg_ptr_->New();
         msg_ptr_->CopyFrom(*pbmsg.msg_ptr_);
@@ -542,7 +543,7 @@ public:
         reflection_ptr_ = pbmsg.msg_ptr_->GetReflection();
     }
 
-    ~pbmsg_t()
+    ~refassist_t()
     {
         if (!trusted_ && msg_ptr_ != nullptr) {
             delete msg_ptr_;
@@ -1311,8 +1312,8 @@ struct field_oper_t<Message*> {
 };
 
 template <>
-struct field_oper_t<pbmsg_t*> {
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value, std::string& errmsg)
+struct field_oper_t<refassist_t*> {
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, refassist_t* value, std::string& errmsg)
     {
         switch (field->type()) {
         case FieldDescriptor::TYPE_MESSAGE:
@@ -1325,7 +1326,7 @@ struct field_oper_t<pbmsg_t*> {
         }
     }
 
-    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, pbmsg_t* value, std::string& errmsg)
+    void set(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, refassist_t* value, std::string& errmsg)
     {
         switch (field->type()) {
         case FieldDescriptor::TYPE_MESSAGE:
@@ -1338,7 +1339,7 @@ struct field_oper_t<pbmsg_t*> {
         }
     }
 
-    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, pbmsg_t* value, std::string& errmsg)
+    void add(const Reflection* ref, Message* msg, const FieldDescriptor* field, refassist_t* value, std::string& errmsg)
     {
         switch (field->type()) {
         case FieldDescriptor::TYPE_MESSAGE:
@@ -1351,12 +1352,12 @@ struct field_oper_t<pbmsg_t*> {
         }
     }
 
-    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string& errmsg)
+    refassist_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, std::string& errmsg)
     {
-        pbmsg_t* ret = nullptr;
+        refassist_t* ret = nullptr;
         switch (field->type()) {
         case FieldDescriptor::TYPE_MESSAGE:
-            ret = pbmsg_t::create(ref->MutableMessage(msg, field));
+            ret = refassist_t::create(ref->MutableMessage(msg, field));
             break;
         default:
             errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
@@ -1366,12 +1367,12 @@ struct field_oper_t<pbmsg_t*> {
         return ret;
     }
 
-    pbmsg_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string& errmsg)
+    refassist_t* get(const Reflection* ref, Message* msg, const FieldDescriptor* field, int idx, std::string& errmsg)
     {
-        pbmsg_t* ret = nullptr;
+        refassist_t* ret = nullptr;
         switch (field->type()) {
         case FieldDescriptor::TYPE_MESSAGE:
-            ret = pbmsg_t::create(ref->MutableRepeatedMessage(msg, field, idx));
+            ret = refassist_t::create(ref->MutableRepeatedMessage(msg, field, idx));
             break;
         default:
             errmsg = "value type and field type do not match, field type is " + std::string(field->type_name());
@@ -1381,5 +1382,5 @@ struct field_oper_t<pbmsg_t*> {
         return ret;
     }
 };
-
+}
 #pragma GCC diagnostic pop

@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
     {
         printf("通过反射创建对象 >>> \n");
 
-        pbmsg_t* pbmsga = pbmsg_t::create("../example/protos/testmsg.proto", "TestMessageB");
+        kermit::refassist_t* pbmsga = kermit::refassist_t::create("../example/protos/testmsg.proto", "TestMessageB");
 
         double doubleData = 100.32;
         pbmsga->set_attr("doubleData", doubleData);
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
     printf("通过PB源码创建的对象来创建对象，之后进行赋值, 再次获取出数值\n");
     {
         TestMessageB msg;
-        pbmsg_t* pbmsga = pbmsg_t::create(&msg);
+        kermit::refassist_t* pbmsga = kermit::refassist_t::create(&msg);
 
         double doubleData = 100.32;
         pbmsga->set_attr("doubleData", doubleData);

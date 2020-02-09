@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
         printf("通过PB对象创建对象 >>> \n");
 
-        auto pb = pbmsg_t::create(&person);
+        auto pb = kermit::refassist_t::create(&person);
         result = pb->get_bin();
         printf("-----------------\n  result length = %zu\n  ", result.length());
         for (std::string::size_type i = 0; i < result.length(); i++) {

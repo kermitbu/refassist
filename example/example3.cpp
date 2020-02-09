@@ -34,20 +34,20 @@ int main(int argc, char* argv[])
     {
         printf("通过反射创建对象 >>> \n");
 
-        pbmsg_t* reqdata = pbmsg_t::create("../example/addressbook.proto", "AddressBook.req_data");
+        kermit::refassist_t* reqdata = kermit::refassist_t::create("../example/addressbook.proto", "AddressBook.req_data");
   
         reqdata->set_attr("tid", tid);
         printf("  set data.tid = %d\n", tid);
         reqdata->set_attr("name", name);
         printf("  set data.name = %s\n", name.c_str());
 
-        pbmsg_t* addressbook = pbmsg_t::create("../example/addressbook.proto", "AddressBook");
+        kermit::refassist_t* addressbook = kermit::refassist_t::create("../example/addressbook.proto", "AddressBook");
         addressbook->set_attr("syd", syd);
         printf("  set syd = %d\n", syd);
         addressbook->set_attr("data", reqdata);
 
 
-        pbmsg_t* person = pbmsg_t::create("../example/addressbook.proto", "Person");
+        kermit::refassist_t* person = kermit::refassist_t::create("../example/addressbook.proto", "Person");
         name = "kermit";
         person->set_attr("name", name);
         printf("  set new name= %s\n", name.c_str());
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
             printf("%02x ", result[i]);
         }
 
-        pbmsg_t* person2 = pbmsg_t::create("../example/addressbook.proto", "Person");
+        kermit::refassist_t* person2 = kermit::refassist_t::create("../example/addressbook.proto", "Person");
         email = "kermit.bu@qq.com";
         person2->set_attr("email", email);
         printf("  set new email= %s\n", email.c_str());

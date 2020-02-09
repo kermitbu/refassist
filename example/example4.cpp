@@ -31,12 +31,12 @@ int main(int argc, char* argv[])
 
         printf("通过反射创建对象 >>> \n");
 
-        pbmsg_t* new_addressbook = pbmsg_t::create(&addressbook);
+        kermit::refassist_t* new_addressbook = kermit::refassist_t::create(&addressbook);
         int32_t syd_get = 440;
         new_addressbook->set_attr("syd", syd_get);
         printf("  get syd = %d\n", syd_get);
 
-        pbmsg_t* data = nullptr;
+        kermit::refassist_t* data = nullptr;
         new_addressbook->get_attr("data", data);
 
         std::string name_get;

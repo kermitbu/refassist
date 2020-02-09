@@ -9,28 +9,28 @@ TEST_CASE( "split_file_name") {
     
     SECTION( "linux 绝对路径" ) {
         std::string fullpath = "/mnt/d/CppWork/pbmsg/abc.proto";
-        pbmsg_t::split_file_name(fullpath, parent, basename);
+        kermit::refassist_t::split_file_name(fullpath, parent, basename);
         REQUIRE( basename == "abc.proto" );
         REQUIRE( parent == "/mnt/d/CppWork/pbmsg/" );
     }
 
     SECTION( "linux 相对路径" ) {
         std::string fullpath = "./../../abc.proto";
-        pbmsg_t::split_file_name(fullpath, parent, basename);
+        kermit::refassist_t::split_file_name(fullpath, parent, basename);
         REQUIRE( basename == "abc.proto" );
         REQUIRE( parent == "./../../" );
     }
 
     SECTION( "linux 不包含路径" ) {
         std::string fullpath = "abc.proto";
-        pbmsg_t::split_file_name(fullpath, parent, basename);
+        kermit::refassist_t::split_file_name(fullpath, parent, basename);
         REQUIRE( basename == "abc.proto" );
         REQUIRE( parent == "" );
     }
 
     SECTION( "linux 不包含文件名" ) {
         std::string fullpath = "../../";
-        pbmsg_t::split_file_name(fullpath, parent, basename);
+        kermit::refassist_t::split_file_name(fullpath, parent, basename);
         REQUIRE( basename == "" );
         REQUIRE( parent == "../../" );
     }
@@ -38,7 +38,7 @@ TEST_CASE( "split_file_name") {
 
 
 TEST_CASE( "设置值之后，序列化的二进制正确", "[set]") {
-    pbmsg_t* pbmsga = pbmsg_t::create("../example/protos/testmsg.proto", "TestMessageB");
+    kermit::refassist_t* pbmsga = kermit::refassist_t::create("../example/protos/testmsg.proto", "TestMessageB");
     TestMessageB src_msg;
     double doubleData = 100.32;
     pbmsga->set_attr("doubleData", doubleData);
@@ -112,7 +112,7 @@ TEST_CASE( "设置值之后，序列化的二进制正确", "[set]") {
 
 
 TEST_CASE( "设置值之后，获取数值正确", "[get]") {
-    pbmsg_t* pbmsga = pbmsg_t::create("../example/protos/testmsg.proto", "TestMessageB");
+    kermit::refassist_t* pbmsga = kermit::refassist_t::create("../example/protos/testmsg.proto", "TestMessageB");
     TestMessageB src_msg;
     double doubleData = 100.32, get_doubleData = 0.0;
     pbmsga->set_attr("doubleData", doubleData);

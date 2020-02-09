@@ -28,7 +28,7 @@ cmake ../build && make
 #include "pbmsg.hpp"
 
 // alloc a pbmsg
-auto pbmsg = pbmsg_t::create("../example/addressbook.proto", "Person");
+auto pbmsg = refassist_t::create("../example/addressbook.proto", "Person");
 
 // set attr
 pbmsg->set_attr("name", std::string("kermit"));

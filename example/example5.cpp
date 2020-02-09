@@ -34,14 +34,14 @@ int main(int argc, char* argv[])
     {
         printf("通过反射创建对象 >>> \n");
 
-        pbmsg_t* reqdata = pbmsg_t::create("../example/addressbook.proto", "AddressBook.req_data");
+        kermit::refassist_t* reqdata = kermit::refassist_t::create("../example/addressbook.proto", "AddressBook.req_data");
   
         reqdata->set_attr("tid", tid);
         printf("  set data.tid = %d\n", tid);
         reqdata->set_attr("name", name);
         printf("  set data.name = %s\n", name.c_str());
 
-        pbmsg_t* addressbook = pbmsg_t::create("../example/addressbook.proto", "AddressBook");
+        kermit::refassist_t* addressbook = kermit::refassist_t::create("../example/addressbook.proto", "AddressBook");
         addressbook->set_attr("syd", syd);
         printf("  set syd = %d\n", syd);
 
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     }
 
     {        
-        pbmsg_t* addressbook = pbmsg_t::create(msg, true);
+        kermit::refassist_t* addressbook = kermit::refassist_t::create(msg, true);
         int syd = 0;
         addressbook->get_attr("syd", syd);
         printf("  get syd = %d\n", syd);

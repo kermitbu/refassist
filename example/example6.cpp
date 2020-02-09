@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
     // 在一个程序中创建来自两个proto文件的结构，静态成员不影响。
     {
         printf("通过反射创建对象 >>> \n");
-        pbmsg_t* pbmsga = pbmsg_t::create("../example/protos/testmsg.proto", "TestMessageA");
+        kermit::refassist_t* pbmsga = kermit::refassist_t::create("../example/protos/testmsg.proto", "TestMessageA");
         double price = 1238.33;
         pbmsga->set_attr("price", price);
         printf("  set syd = %lf\n", price);
@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
   {
      printf("在新生命周期创建创建另外一个文件中定义的结构对象 >>> \n");
 
-       auto pbmsga2 = pbmsg_t::create("../example/addressbook.proto", "Person");
+       auto pbmsga2 = kermit::refassist_t::create("../example/addressbook.proto", "Person");
 
         std::string name = "kermit";
         pbmsga2->set_attr("name", name);
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     }
 
     // {        
-    //     pbmsg_t* addressbook = pbmsg_t::create(msg, true);
+    //     kermit::refassist_t* addressbook = kermit::refassist_t::create(msg, true);
     //     int syd = 0;
     //     addressbook->get_attr("syd", syd);
     //     printf("  get syd = %d\n", syd);
