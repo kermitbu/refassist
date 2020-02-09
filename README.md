@@ -1,13 +1,13 @@
-# pbmsg
+# refassist
 
 #### Description
 
-pbmsg is a wrapper around protobuf reflection usage, making reflection easier to use.
+refassist is a wrapper around protobuf reflection usage, making reflection easier to use.
 
 
 #### Get the example code
 ```bash
-git clone https://github.com/kermitbu/pbmsg.git
+git clone https://github.com/kermitbu/refassist.git
 git submodule init
 git submodule update
 ```
@@ -25,33 +25,33 @@ cmake ../build && make
 #### Instructions
 
 ```cpp
-#include "pbmsg.hpp"
+#include "refassist.hpp"
 
-// alloc a pbmsg
-auto pbmsg = refassist_t::create("../example/addressbook.proto", "Person");
+// alloc a refassist
+auto refassist = kermit::refassist_t::create("../example/addressbook.proto", "Person");
 
 // set attr
-pbmsg->set_attr("name", std::string("kermit"));
-pbmsg->set_attr("id", 1203);
+refassist->set_attr("name", std::string("kermit"));
+refassist->set_attr("id", 1203);
 
 // get pb binary
-auto result = pbmsg->get_bin();
+auto result = refassist->get_bin();
 
 // get pb message
-auto msg = pbmsg->get_msg(true);
+auto msg = refassist->get_msg(true);
 
 // get attr
 std::string name;
-pbmsg->get_attr("name", name);
+refassist->get_attr("name", name);
 int32_t id = 0;
-pbmsg->get_attr("id", id);
+refassist->get_attr("id", id);
 
 // clear attr
-pbmsg->clear_attr("id", id);
+refassist->clear_attr("id", id);
 
 // dealloc buffer
 delete msg;
-delete pbmsg;
+delete refassist;
 ```
 
 #### Contribution

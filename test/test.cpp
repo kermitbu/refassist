@@ -1,17 +1,17 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include "catch.hpp"
 #include <string>
-#include "pbmsg.hpp"
+#include "refassist.hpp"
 #include "testmsg.pb.h"
 
 TEST_CASE( "split_file_name") {
     std::string parent, basename;
     
     SECTION( "linux 绝对路径" ) {
-        std::string fullpath = "/mnt/d/CppWork/pbmsg/abc.proto";
+        std::string fullpath = "/mnt/d/CppWork/refassist/abc.proto";
         kermit::refassist_t::split_file_name(fullpath, parent, basename);
         REQUIRE( basename == "abc.proto" );
-        REQUIRE( parent == "/mnt/d/CppWork/pbmsg/" );
+        REQUIRE( parent == "/mnt/d/CppWork/refassist/" );
     }
 
     SECTION( "linux 相对路径" ) {
